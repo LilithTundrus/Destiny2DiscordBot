@@ -91,7 +91,13 @@ function getMileStones() {
     return traveler
         .getPublicMilestones()
         .then(data => {
-            //console.log(data);
+            console.log(data.Response);
+            console.log(data.Response['202035466'])
+            
+            
+            Object.keys(data).forEach(function(key) {
+                console.log(key, obj[key]);
+            });
             return data;
         })
         .catch(err => {
