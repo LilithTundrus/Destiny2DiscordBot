@@ -21,7 +21,8 @@ var bot = new Discord.Client({                                      // Initializ
 
 const traveler = new Traveler({
     apikey: config.destiny2Token,
-    userAgent: `Node ${process.version}`                            //used to identify your request to the API
+    userAgent: `Node ${process.version}`,                           //used to identify your request to the API
+    debug: true
 });
 
 //Access the enums (example componentType profiles)
@@ -59,13 +60,41 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     message: `Version: ${ver} Running on server: ${os.type()} ${os.hostname()} ${os.platform()} ${os.cpus()[0].model}`
                 });
                 break;
-            case 'beh':
-            bot.sendMessage({
-                to: channelID,
-                message: 'beh'
-            });
-            break;
+            case 'search':
+                searchForDestinyPlayer('crazycoffee')
+                break;
+            case 'ms':
+                getMileStones()
+                    .then(mileStones => {
+                        bot.sendMessage({
+                            to: channelID,
+                            message: mileStones
+                        });
+                    })
+                break;
             // Just add any case commands here -- if you run into random crashes on bad commands, add a defualt handler
         }
     }
 });
+
+function searchForDestinyPlayer(playerArg) {
+    traveler
+        .searchDestinyPlayer('4', 'CrazyCoffee')
+        .then(player => {
+            console.log(player);
+        }).catch(err => {
+            //do something with the error
+        })
+}
+
+function getMileStones() {
+    return traveler
+        .getPublicMilestones()
+        .then(data => {
+            //console.log(data);
+            return data;
+        })
+        .catch(err => {
+            console.log(err);
+        })
+}
