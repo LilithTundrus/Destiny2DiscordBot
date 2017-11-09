@@ -10,13 +10,11 @@ const Enums = require('the-traveler/build/enums');                  // Get type 
 //Built-in requires
 var fs = require('fs');                                             // used to read helpNotes.txt
 var os = require('os');                                             // os info lib built into node
-const ver = '0.0.002';
-
+const ver = '0.0.003';
 /*
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 
 */
-
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -37,6 +35,7 @@ var profilesType = Enums.ComponentType.Profiles;
 bot.on('ready', function (evt) {                                    //do some logging and start ensure bot is running
     console.log('Connected to Discord...');
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
+    console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
     bot.setPresence({                                               //make the bot 'play' soemthing
         idle_since: null,
         game: { name: 'Destiny 2' }
@@ -84,7 +83,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     })
                 break;
             case 'manifest':
-                getDestinyManifest()
+                downloadDestinyManifest()
                     .then(message => {
                         bot.sendMessage({
                             to: channelID,
@@ -133,13 +132,16 @@ function getMileStones() {
 }
 
 //get the API structure JSON --this will be important later
-function getDestinyManifest() {
+function downloadDestinyManifest() {
     return traveler.getDestinyManifest()
         .then((manifest) => {
             fs.writeFileSync('./manifest.json', JSON.stringify(manifest, null, 2));
         })
         .then(() => {
-            return 'Manifest written to file!';
+            return 'Manifest written to file!';                     //return a success message
+        })
+        .catch(err => {
+            return err;
         })
 }
 
