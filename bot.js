@@ -10,7 +10,12 @@ const Enums = require('the-traveler/build/enums');                  // Get type 
 //Built-in requires
 var fs = require('fs');                                             // used to read helpNotes.txt
 var os = require('os');                                             // os info lib built into node
-const ver = '0.0.001';
+const ver = '0.0.002';
+
+/*
+TODO: Create a really good middleware solution for the Destiny/Traveler API
+
+*/
 
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -62,6 +67,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'search':
                 searchForDestinyPlayer('crazycoffee')
+                    .then((playerData) => {
+                        bot.sendMessage({
+                            to: channelID,
+                            message: playerData
+                        });
+                    })
                 break;
             case 'ms':
                 getMileStones()
@@ -72,37 +83,64 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     })
                 break;
+            case 'manifest':
+                getDestinyManifest()
+                    .then(message => {
+                        bot.sendMessage({
+                            to: channelID,
+                            message: message
+                        });
+                    })
+                break;
             // Just add any case commands here -- if you run into random crashes on bad commands, add a defualt handler
         }
     }
 });
 
 function searchForDestinyPlayer(playerArg) {
-    traveler
-        .searchDestinyPlayer('4', 'CrazyCoffee')
+    return traveler
+        .searchDestinyPlayer('4', 'spispartan')
         .then(player => {
             console.log(player);
+            return player;
         }).catch(err => {
-            //do something with the error
+            console.log(err);
+            return err;
         })
 }
 
+//this should be renamed since it's aggregating a lot of data from multiple D2 API endpoints
 function getMileStones() {
     return traveler
         .getPublicMilestones()
         .then(data => {
             //get the data.Response object keys since they are hashes and can change
-            Object.keys(data.Response).forEach(function(key) {
+            Object.keys(data.Response).forEach(function (key) {
+                console.log(key, data.Response[key].endDate);
                 console.log(key, data.Response[key]);
                 console.log('\n' + key)
+                //once we have the hash(key) we can call the getMileStoneContent to get the rest of the data
                 return traveler.getPublicMilestoneContent(key)
                     .then(mileStoneData => {
                         console.log(mileStoneData.Response);
                     })
             });
-            return data;
+            return JSON.stringify(data.Response).substring(0, 1000);
         })
         .catch(err => {
             console.log(err);
         })
 }
+
+//get the API structure JSON --this will be important later
+function getDestinyManifest() {
+    return traveler.getDestinyManifest()
+        .then((manifest) => {
+            fs.writeFileSync('./manifest.json', JSON.stringify(manifest, null, 2));
+        })
+        .then(() => {
+            return 'Manifest written to file!';
+        })
+}
+
+
