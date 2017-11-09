@@ -91,12 +91,14 @@ function getMileStones() {
     return traveler
         .getPublicMilestones()
         .then(data => {
-            console.log(data.Response);
-            console.log(data.Response['202035466'])
-            
-            
-            Object.keys(data).forEach(function(key) {
-                console.log(key, obj[key]);
+            //get the data.Response object keys since they are hashes and can change
+            Object.keys(data.Response).forEach(function(key) {
+                console.log(key, data.Response[key]);
+                console.log('\n' + key)
+                return traveler.getPublicMilestoneContent(key)
+                    .then(mileStoneData => {
+                        console.log(mileStoneData.Response);
+                    })
             });
             return data;
         })
