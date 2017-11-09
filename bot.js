@@ -1,16 +1,32 @@
 //Global vars
-'use strict';                                                       //more stringent error reporting for small things
-const config = require('./config.js');                              //conifg/auth data
+'use strict';                                                       // allow less 'bad' code
+//custom requires
+const config = require('./config.js');                              // conifg/auth data
+//npm packages
+var Discord = require('discord.io');                                // discord API wrapper
+var request = require('request');                                   // used to make call to WF worldState
+var Traveler = require('the-traveler').default;                     //Destiny 2 API wrapper
+const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
+//Built-in requires
+var fs = require('fs');                                             // used to read helpNotes.txt
+var os = require('os');                                             // os info lib built into node
 const ver = '0.0.001';
-var Discord = require('discord.io');                                //discord API wrapper
-var request = require('request');                                   //used to make call to WF worldState
-var fs = require('fs');                                             //used to read helpNotes.txt
-var os = require('os');                                             //os info lib built into node
+
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
     autorun: true
 });
+
+
+const traveler = new Traveler({
+    apikey: config.destiny2Token,
+    userAgent: `Node ${process.version}`                            //used to identify your request to the API
+});
+
+//Access the enums (example componentType profiles)
+var profilesType = Enums.ComponentType.Profiles;
+
 
 bot.on('ready', function (evt) {                                    //do some logging and start ensure bot is running
     console.log('Connected to Discord...');
@@ -25,7 +41,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     if (message.substring(0, 1) == '%') {                           //listen for messages that will start with `^`
         var args = message.substring(1).split(' ');
         var cmd = args[0];
-        //log any messages sent to the bot for debugging
+        //log any messages sent to the bot to the console and to file for debugging
         fs.appendFileSync('discordMessagelog.log', `${user} sent: ${message} at ${Date.now()}`);
         console.log(`${user} sent: ${message} at ${Date.now()}`);
         args = args.splice(1);
