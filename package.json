@@ -1,0 +1,25 @@
+{
+  "name": "discord-destiny2-bot",
+  "version": "0.0.1",
+  "description": "A Discord bot using the npm package: the-traveler",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LilithTundrus/Destiny2DiscordBot.git"
+  },
+  "keywords": [
+    "destiny",
+    "2",
+    "discord",
+    "bot"
+  ],
+  "author": "Lilith Tundrus",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/LilithTundrus/Destiny2DiscordBot/issues"
+  },
+  "homepage": "https://github.com/LilithTundrus/Destiny2DiscordBot#readme"
+}
