@@ -82,7 +82,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         if (playerData.iconPath) {
                             iconBool = true
                         }
-
+                        var playerID = playerData.membershipId.toString();
+                        console.log(playerID)
                         var embed = {
                             author: {
                                 name: bot.username,
@@ -124,7 +125,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                 embed: embed,
                                 typing: true
                             });
-                            return getPlayerProfile(JSON.stringify(playerData.membershipId))
+                            return getPlayerProfile(playerID)
                         } else {
                             bot.sendMessage({
                                 to: channelID,
@@ -254,8 +255,13 @@ function getClanWeeklyRewardStateData() {
 }
 
 function getPlayerProfile(destinyMembershipID) {
-    return traveler.getProfile('4', destinyMembershipID).then((profileData) => {
+    return traveler.getProfile('4', destinyMembershipID, {components: [200,201] }).then((profileData) => {
         console.log(profileData);
+        return profileData;
+        //TODO: determine the most recently played character/number of characters
+        console.log(profileData.Response.characters.data)
+    }).catch((err) => {
+        console.log(err);
     })
 }
 
