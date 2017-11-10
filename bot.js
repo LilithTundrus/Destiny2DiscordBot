@@ -21,6 +21,7 @@ const traveler = new Traveler({                                     // Must be d
 });
 //This doesn't work just yet
 var destinyManifest = createNewManifest();
+const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
 const ver = '0.0.005';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
@@ -72,53 +73,54 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'searchplayer':
                 let playerName = message.substring(14)
-                searchForDestinyPlayerPC(playerName)
+                return searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
                         if (playerData.Response !== null) {
                             var playerID = playerData.membershipId.toString();
                             //get the extra stuff like their icon
-                            return getPlayerProfile(playerID).then(() => {
-                                bot.sendMessage({
-                                    to: channelID,
-                                    message: '',
-                                    embed: embed,
-                                    typing: true
-                                });
-                            })
+                            return getPlayerProfile(playerID)
+                                .then((playerCharData) => {
+                                    var emblemURL =  destiny2BaseURL + playerCharData[0].emblemPath;
+                                    console.log(emblemURL)
+                                    var embed = {
+                                        author: {
+                                            name: playerData.displayName,
+                                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                                        },
+                                        color: 3447003,
+                                        title: 'Account Info',
+                                        description: 'All current available account info from search endpoint',
+                                        fields: [
+                                            {
+                                                name: '\nPlayer ID',
+                                                value: JSON.stringify(playerData.membershipId),
+                                                inline: true
+                                            },
+                                            {
+                                                name: 'Display Name',
+                                                value: JSON.stringify(playerData.displayName),
+                                                inline: true
+                                            },
+                                            {
+                                                name: 'Account type',
+                                                value: 'PC',
+                                                inline: true
+                                            },
+                                        ],
+                                        thumbnail: {
+                                            url: emblemURL
+                                        },
+                                    }
+                                    bot.sendMessage({
+                                        to: channelID,
+                                        message: '',
+                                        embed: embed,
+                                        typing: true
+                                    });
+                                })
                                 .catch((err) => {
 
                                 })
-                            console.log(playerID)
-                            var embed = {
-                                author: {
-                                    name: bot.username,
-                                    icon_url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
-                                },
-                                color: 3447003,
-                                title: 'Account Info',
-                                description: 'All current available account info from search endpoint',
-                                fields: [
-                                    {
-                                        name: '\nPlayer ID',
-                                        value: JSON.stringify(playerData.membershipId),
-                                        inline: true
-                                    },
-                                    {
-                                        name: 'Display Name',
-                                        value: JSON.stringify(playerData.displayName),
-                                        inline: true
-                                    },
-                                    {
-                                        name: 'Account type',
-                                        value: 'PC',
-                                        inline: true
-                                    },
-                                ],
-                                thumbnail: {
-                                    url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
-                                },
-                            }
-
                         } else {
                             //put an embed here as well!
                             bot.sendMessage({
@@ -237,7 +239,7 @@ function createNewManifest() {
     })
 }
 
-
+//Not yet working/used
 function queryDestinyManifest(query) {
     destinyManifest.queryManifest(query).then(queryResult => {
         console.log(queryResult);
@@ -255,13 +257,21 @@ function getClanWeeklyRewardStateData() {
 }
 
 function getPlayerProfile(destinyMembershipID) {
-    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] }).then((profileData) => {
-        console.log(profileData);
-        return profileData;
-        //TODO: determine the most recently played character/number of characters
-        console.log(profileData.Response.characters.data)
-    }).catch((err) => {
-        console.log(err);
-    })
+    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
+        .then((profileData) => {
+            console.log(profileData);
+            //console.log(profileData.Response.characters.data)
+            var characterDataArray = [];
+            Object.keys(profileData.Response.characters.data).forEach(function (key) {
+                console.log('\n' + key)
+                //console.log(profileData.Response.characters.data[key])
+                characterDataArray.push(profileData.Response.characters.data[key])
+            });
+            return characterDataArray;
+            //TODO: determine the most recently played character/number of characters
+        })
+        .catch((err) => {
+            console.log(err);
+        })
 }
 
