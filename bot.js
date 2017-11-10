@@ -77,21 +77,54 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 let playerName = message.substring(14)
                 searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
-                        let embed = {
+                        var iconBool = false
+                        //check for player icon path
+                        if (playerData.iconPath) {
+                            iconBool = true
+                        }
+
+                        var embed = {
                             author: {
-                                name: bot.username 
+                                name: bot.username,
+                                icon_url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
                             },
                             color: 3447003,
                             title: 'Player Info',
-                            description: JSON.stringify(playerData)
+                            description: 'All current available account info from search endpoint',
+                            fields: [
+                                {
+                                    name: '\nPlayer ID',
+                                    value: JSON.stringify(playerData.membershipId),
+                                    inline: true
+                                },
+                                {
+                                    name: 'Display Name',
+                                    value: JSON.stringify(playerData.displayName),
+                                    inline: true
+                                },
+                                {
+                                    name: 'Account type',
+                                    value: 'PC',
+                                    inline: true
+                                },
+                                {
+                                    name: 'Icon?',
+                                    value: iconBool,
+                                    inline: true
+                                },
+                            ],
+                            thumbnail: {
+                                url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
+                            },
                         }
-                        if (playerData.Response.length > 0) {
+                        if (playerData.Response !== null) {
                             bot.sendMessage({
                                 to: channelID,
                                 message: '',
                                 embed: embed,
                                 typing: true
                             });
+                            return getPlayerProfile(JSON.stringify(playerData.membershipId))
                         } else {
                             bot.sendMessage({
                                 to: channelID,
@@ -133,7 +166,7 @@ function searchForDestinyPlayerPC(playerArg) {
         .searchDestinyPlayer('4', encodedPlayerArg)
         .then(player => {
             console.log(player);
-            return player;
+            return player.Response[0];
         }).catch(err => {
             console.log(err);
             return err;
@@ -219,3 +252,10 @@ function getClanWeeklyRewardStateData() {
             return data.Response.rewards;
         })
 }
+
+function getPlayerProfile(destinyMembershipID) {
+    return traveler.getProfile('4', destinyMembershipID).then((profileData) => {
+        console.log(profileData);
+    })
+}
+
