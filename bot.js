@@ -48,7 +48,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         var cmd = args[0];
         //log any messages sent to the bot to the console and to file for debugging
         fs.appendFileSync('discordMessagelog.log', `${user} sent: ${message} at ${Date.now()}`);
-        console.log(`${user} sent: ${message} at ${new Date().toISOString}`);
+        console.log(`${user} sent: ${message} at ${new Date().toISOString()}`);
         args = args.splice(1);
         switch (cmd) {                                              //bot needs to know if it will execute a command
             case 'help':                                            //display the help file
@@ -69,7 +69,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     .then((playerData) => {
                         bot.sendMessage({
                             to: channelID,
-                            message: playerData
+                            message: JSON.stringify(playerData)
                         });
                     })
                 break;
@@ -98,7 +98,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
 function searchForDestinyPlayer(playerArg) {
     return traveler
-        .searchDestinyPlayer('-1', 'Spispartan')
+        .searchDestinyPlayer('4', 'test')
         .then(player => {
             console.log(player);
             return player;
