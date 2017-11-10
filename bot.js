@@ -28,10 +28,10 @@ Notes:
 - Current design goal is PC ONLY
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
-TODO: Fix player search for PC not working
 TODO: Clean up code
 TODO: create config-template
 TODO: clean up currently working components and outline what they do
+TODO: make the embed template a class!
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -79,10 +79,38 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'about':
                 //set up embed
-
+                let aboutEmbed = baseDiscordEmbed;
+                aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
+                aboutEmbed.color = 3447003;
+                aboutEmbed.title = `${bot.username} ${ver}`;
+                aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--'
+                aboutEmbed.fields =
+                    [{
+                        name: 'Process Info',
+                        value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`,
+                        inline: true
+                    },
+                    {
+                        name: 'Uptime',
+                        value: formatTime(process.uptime()),
+                        inline: true
+                    },
+                    {
+                        name: 'PH',
+                        value: 'PH',
+                        inline: true
+                    },
+                    {
+                        name: 'PH',
+                        value: 'PH',
+                        inline: true
+                    },]
+                //`Version: ${ver} Running on server: ${os.type()} ${os.hostname()} ${os.platform()} ${os.cpus()[0].model}`
                 bot.sendMessage({
                     to: channelID,
-                    message: `Version: ${ver} Running on server: ${os.type()} ${os.hostname()} ${os.platform()} ${os.cpus()[0].model}`
+                    message: '',
+                    embed: aboutEmbed,
+                    typing: true
                 });
                 break;
             case 'searchplayer':
@@ -293,5 +321,22 @@ function getPlayerProfile(destinyMembershipID) {
         .catch((err) => {
             console.log(err);
         })
+}
+
+
+
+
+//misc functions
+
+//format process.uptime
+function formatTime(seconds) {
+    function pad(s) {
+        return (s < 10 ? '0' : '') + s;
+    }
+    var hours = Math.floor(seconds / (60 * 60));
+    var minutes = Math.floor(seconds % (60 * 60) / 60);
+    var seconds = Math.floor(seconds % 60);
+
+    return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
