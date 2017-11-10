@@ -25,7 +25,8 @@ const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL 
 const ver = '0.0.005';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
-IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
+- IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
+- Current design goal is PC ONLY
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: Fix player search for PC not working
@@ -48,6 +49,17 @@ bot.on('ready', function (evt) {                                    // Do some l
         game: { name: 'Destiny 2' }
     });
 });
+
+//embed message template
+var baseDiscordEmbed = {
+    author: {
+        name: bot.username,
+        icon_url: config.travelerIcon
+    },
+    color: 3447003,
+    title: '',
+    description: '',
+}
 
 bot.on('message', function (user, userID, channelID, message, evt) {
     if (message.substring(0, 1) == '%') {                           // Listen for messages that will start with `^`
@@ -75,30 +87,29 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 let playerName = message.substring(14)
                 return searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
-                        if (playerData.Response !== null) {
-                            var playerID = playerData.membershipId.toString();
+                        if (playerData.Response[0]) {
+                            var playerID = playerData.Response[0].membershipId.toString();
                             //get the extra stuff like their icon
                             return getPlayerProfile(playerID)
                                 .then((playerCharData) => {
-                                    var emblemURL =  destiny2BaseURL + playerCharData[0].emblemPath;
-                                    console.log(emblemURL)
+                                    var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
                                     var embed = {
                                         author: {
-                                            name: playerData.displayName,
+                                            name: playerData.Response[0].displayName,
                                             icon_url: 'http://i.imgur.com/tZvXxcu.png'
                                         },
                                         color: 3447003,
-                                        title: 'Account Info',
+                                        title: 'Account/Player Info',
                                         description: 'All current available account info from search endpoint',
                                         fields: [
                                             {
                                                 name: '\nPlayer ID',
-                                                value: JSON.stringify(playerData.membershipId),
+                                                value: playerData.Response[0].membershipId,
                                                 inline: true
                                             },
                                             {
                                                 name: 'Display Name',
-                                                value: JSON.stringify(playerData.displayName),
+                                                value: playerData.Response[0].displayName,
                                                 inline: true
                                             },
                                             {
@@ -123,12 +134,20 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                 })
                         } else {
                             //put an embed here as well!
+                            let messageEmbed = baseDiscordEmbed;
+                            messageEmbed.author = {name: bot.username, icon_url: config.travelerIcon}
+                            messageEmbed.description = `\n${playerName} not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
+                            messageEmbed.title = 'Error:'
                             bot.sendMessage({
                                 to: channelID,
-                                message: `${playerName} not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
+                                message: '',
+                                embed: messageEmbed,
+                                typing: true
                             });
                         }
-
+                    })
+                    .catch((err) => {
+                        console.log(err);
                     })
                 break;
             case 'ms':
@@ -169,7 +188,7 @@ function searchForDestinyPlayerPC(playerArg) {
         .searchDestinyPlayer('4', encodedPlayerArg)
         .then(player => {
             console.log(player);
-            return player.Response[0];                              // For battle.net (PC) there should only ever be one player!
+            return player;                                          // For battle.net (PC) there should only ever be one player!
         }).catch(err => {
             console.log(err);
             return err;
