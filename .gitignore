@@ -3,3 +3,4 @@ config.js
 **.log
 log/
 manifest.json
+**.content
