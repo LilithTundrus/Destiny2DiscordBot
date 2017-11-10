@@ -13,7 +13,7 @@ var os = require('os');                                             // os info l
 const ver = '0.0.003';
 /*
 TODO: Create a really good middleware solution for the Destiny/Traveler API
-
+TODO: Fix player search for PC not working
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -48,7 +48,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         var cmd = args[0];
         //log any messages sent to the bot to the console and to file for debugging
         fs.appendFileSync('discordMessagelog.log', `${user} sent: ${message} at ${Date.now()}`);
-        console.log(`${user} sent: ${message} at ${Date.now()}`);
+        console.log(`${user} sent: ${message} at ${new Date().toISOString}`);
         args = args.splice(1);
         switch (cmd) {                                              //bot needs to know if it will execute a command
             case 'help':                                            //display the help file
@@ -98,7 +98,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
 function searchForDestinyPlayer(playerArg) {
     return traveler
-        .searchDestinyPlayer('4', 'spispartan')
+        .searchDestinyPlayer('-1', 'Spispartan')
         .then(player => {
             console.log(player);
             return player;
@@ -144,5 +144,3 @@ function downloadDestinyManifest() {
             return err;
         })
 }
-
-
