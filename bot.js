@@ -13,33 +13,30 @@ var profilesType = Enums.ComponentType.Profiles;                    // Access th
 //Built-in requires
 var fs = require('fs');
 var os = require('os');                                             // OS info lib built into node for debugging
-
 // Before the bot starts up, set up a traveler Manifest to query for data
 const traveler = new Traveler({                                     // Must be defined before destinyManifest can be defined
     apikey: config.destiny2Token,
     userAgent: `Node ${process.version}`,                           // Used to identify your request to the API
     debug: true
 });
-
-
+//This doesn't work just yet
 var destinyManifest = createNewManifest();
-const ver = '0.0.005';
+const ver = '0.0.005';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
-IF A URL ISN'T WORKING TRY ENCODING IT ASDF
+IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: Fix player search for PC not working
 TODO: Clean up code
 TODO: create config-template
+TODO: clean up currently working components and outline what they do
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
     autorun: true
 });
-
-
 
 bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
     console.log('Connected to Discord...');
@@ -77,56 +74,53 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 let playerName = message.substring(14)
                 searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
-                        var iconBool = false
-                        //check for player icon path
-                        if (playerData.iconPath) {
-                            iconBool = true
-                        }
-                        var playerID = playerData.membershipId.toString();
-                        console.log(playerID)
-                        var embed = {
-                            author: {
-                                name: bot.username,
-                                icon_url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
-                            },
-                            color: 3447003,
-                            title: 'Player Info',
-                            description: 'All current available account info from search endpoint',
-                            fields: [
-                                {
-                                    name: '\nPlayer ID',
-                                    value: JSON.stringify(playerData.membershipId),
-                                    inline: true
-                                },
-                                {
-                                    name: 'Display Name',
-                                    value: JSON.stringify(playerData.displayName),
-                                    inline: true
-                                },
-                                {
-                                    name: 'Account type',
-                                    value: 'PC',
-                                    inline: true
-                                },
-                                {
-                                    name: 'Icon?',
-                                    value: iconBool,
-                                    inline: true
-                                },
-                            ],
-                            thumbnail: {
-                                url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
-                            },
-                        }
                         if (playerData.Response !== null) {
-                            bot.sendMessage({
-                                to: channelID,
-                                message: '',
-                                embed: embed,
-                                typing: true
-                            });
-                            return getPlayerProfile(playerID)
+                            var playerID = playerData.membershipId.toString();
+                            //get the extra stuff like their icon
+                            return getPlayerProfile(playerID).then(() => {
+                                bot.sendMessage({
+                                    to: channelID,
+                                    message: '',
+                                    embed: embed,
+                                    typing: true
+                                });
+                            })
+                                .catch((err) => {
+
+                                })
+                            console.log(playerID)
+                            var embed = {
+                                author: {
+                                    name: bot.username,
+                                    icon_url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
+                                },
+                                color: 3447003,
+                                title: 'Account Info',
+                                description: 'All current available account info from search endpoint',
+                                fields: [
+                                    {
+                                        name: '\nPlayer ID',
+                                        value: JSON.stringify(playerData.membershipId),
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Display Name',
+                                        value: JSON.stringify(playerData.displayName),
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Account type',
+                                        value: 'PC',
+                                        inline: true
+                                    },
+                                ],
+                                thumbnail: {
+                                    url: 'http://i.ytimg.com/vi/su5hasTPEIA/maxresdefault.jpg'
+                                },
+                            }
+
                         } else {
+                            //put an embed here as well!
                             bot.sendMessage({
                                 to: channelID,
                                 message: `${playerName} not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
@@ -161,13 +155,19 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     }
 });
 
+/**
+ * search for a Battle.net (PC) player name and return the Destiny 2 API Account/Player data.
+ * 
+ * @param {string} playerArg 
+ * @returns {Promise}
+ */
 function searchForDestinyPlayerPC(playerArg) {
     let encodedPlayerArg = encodeURIComponent(playerArg)
     return traveler
         .searchDestinyPlayer('4', encodedPlayerArg)
         .then(player => {
             console.log(player);
-            return player.Response[0];
+            return player.Response[0];                              // For battle.net (PC) there should only ever be one player!
         }).catch(err => {
             console.log(err);
             return err;
@@ -255,7 +255,7 @@ function getClanWeeklyRewardStateData() {
 }
 
 function getPlayerProfile(destinyMembershipID) {
-    return traveler.getProfile('4', destinyMembershipID, {components: [200,201] }).then((profileData) => {
+    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] }).then((profileData) => {
         console.log(profileData);
         return profileData;
         //TODO: determine the most recently played character/number of characters
