@@ -1,6 +1,5 @@
-//Global vars
 'use strict';                                                       // Allow less 'bad' code
-//custom requires
+//custom requires/libs
 const config = require('./config.js');                              // Conifg/auth data
 //npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
@@ -22,7 +21,7 @@ const traveler = new Traveler({                                     // Must be d
 //This doesn't work just yet
 var destinyManifest = createNewManifest();
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.005';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.006';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -70,6 +69,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         console.log(`${user} sent: ${message} at ${new Date().toISOString()}`);
         args = args.splice(1);
         switch (cmd) {                                              // Bot needs to know if it will execute a command
+            //make all of these an embed
             case 'help':                                            // Display the help file
                 let helpMsg = fs.readFileSync('./helpNotes.txt');
                 bot.sendMessage({
@@ -77,7 +77,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     message: '```' + helpMsg.toString() + '```'     //the ``` is there so discord treats it as monospace
                 });
                 break;
-            case 'ver':
+            case 'about':
+                //set up embed
+
                 bot.sendMessage({
                     to: channelID,
                     message: `Version: ${ver} Running on server: ${os.type()} ${os.hostname()} ${os.platform()} ${os.cpus()[0].model}`
@@ -135,8 +137,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         } else {
                             //put an embed here as well!
                             let messageEmbed = baseDiscordEmbed;
-                            messageEmbed.author = {name: bot.username, icon_url: config.travelerIcon}
-                            messageEmbed.description = `\n${playerName} not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
+                            messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
                             messageEmbed.title = 'Error:'
                             bot.sendMessage({
                                 to: channelID,
