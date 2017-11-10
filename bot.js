@@ -1,23 +1,37 @@
 //Global vars
-'use strict';                                                       // allow less 'bad' code
+'use strict';                                                       // Allow less 'bad' code
 //custom requires
-const config = require('./config.js');                              // conifg/auth data
+const config = require('./config.js');                              // Conifg/auth data
 //npm packages
-var Discord = require('discord.io');                                // discord API wrapper
-var request = require('request');                                   // used to make call to WF worldState
-var Traveler = require('the-traveler').default;                     //Destiny 2 API wrapper
+var Discord = require('discord.io');                                // Discord API wrapper
+var request = require('request');                                   // Used to make call to WF worldState
+var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
+//traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
-
-var sqlite3 = require('sqlite3').verbose();
-
+var profilesType = Enums.ComponentType.Profiles;                    // Access the-traveler enums
 //Built-in requires
-var fs = require('fs');                                             // used to read helpNotes.txt
-var os = require('os');                                             // os info lib built into node
+var fs = require('fs');
+var os = require('os');                                             // OS info lib built into node for debugging
+
+// Before the bot starts up, set up a traveler Manifest to query for data
+const traveler = new Traveler({                                     // Must be defined before destinyManifest can be defined
+    apikey: config.destiny2Token,
+    userAgent: `Node ${process.version}`,                           // Used to identify your request to the API
+    debug: true
+});
+
+
+var destinyManifest = createNewManifest();
 const ver = '0.0.003';
 /*
+Notes:
+IF A URL ISN'T WORKING TRY ENCODING IT ASDF
+
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: Fix player search for PC not working
+TODO: Clean up code
+TODO: create config-template
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -26,17 +40,8 @@ var bot = new Discord.Client({                                      // Initializ
 });
 
 
-const traveler = new Traveler({
-    apikey: config.destiny2Token,
-    userAgent: `Node ${process.version}`,                           //used to identify your request to the API
-    debug: true
-});
 
-//Access the enums (example componentType profiles)
-var profilesType = Enums.ComponentType.Profiles;
-
-
-bot.on('ready', function (evt) {                                    //do some logging and start ensure bot is running
+bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
     console.log('Connected to Discord...');
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
@@ -47,15 +52,15 @@ bot.on('ready', function (evt) {                                    //do some lo
 });
 
 bot.on('message', function (user, userID, channelID, message, evt) {
-    if (message.substring(0, 1) == '%') {                           //listen for messages that will start with `^`
+    if (message.substring(0, 1) == '%') {                           // Listen for messages that will start with `^`
         var args = message.substring(1).split(' ');
         var cmd = args[0];
-        //log any messages sent to the bot to the console and to file for debugging
+        // Log any messages sent to the bot to the console and to file for debugging
         fs.appendFileSync('discordMessagelog.log', `${user} sent: ${message} at ${Date.now()}`);
         console.log(`${user} sent: ${message} at ${new Date().toISOString()}`);
         args = args.splice(1);
-        switch (cmd) {                                              //bot needs to know if it will execute a command
-            case 'help':                                            //display the help file
+        switch (cmd) {                                              // Bot needs to know if it will execute a command
+            case 'help':                                            // Display the help file
                 let helpMsg = fs.readFileSync('./helpNotes.txt');
                 bot.sendMessage({
                     to: channelID,
@@ -87,7 +92,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     })
                 break;
             case 'manifest':
-                queryTest();
+                queryDestinyManifest('SELECT * FROM DestinyMilestoneDefinition')
                 break;
             case 'clantest':
                 getClanWeeklyRewardStateData()
@@ -105,7 +110,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
 function searchForDestinyPlayer(playerArg) {
     return traveler
-        .searchDestinyPlayer('-1', 'CrazyCoffee#1619')
+        .searchDestinyPlayer('4', 'CrazyCoffee%231619')
         .then(player => {
             console.log(player);
             return player;
@@ -167,7 +172,7 @@ function queryTest() {
     })
 }
 
-//create a Manifest instance to query for D2 data on items
+//create a Manifest instance to query for D2 data within the DB (super janky)
 function createNewManifest() {
     traveler.getDestinyManifest().then(result => {
         traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
@@ -179,12 +184,16 @@ function createNewManifest() {
 }
 
 
-function queryManifest(query) {
-
+function queryDestinyManifest(query) {
+    destinyManifest.queryManifest(query).then(queryResult => {
+        console.log(queryResult);
+    }).catch(err => {
+        console.log(err);
+    });
 }
 
 function getClanWeeklyRewardStateData() {
-    return traveler.getClanWeeklyRewardState('2805234')
+    return traveler.getClanWeeklyRewardState(config.destiny2ClanID)
         .then((data) => {
             console.log(data.Response.rewards[0].entries);
             return data.Response.rewards;
