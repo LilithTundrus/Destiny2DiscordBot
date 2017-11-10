@@ -7,6 +7,10 @@ var Discord = require('discord.io');                                // discord A
 var request = require('request');                                   // used to make call to WF worldState
 var Traveler = require('the-traveler').default;                     //Destiny 2 API wrapper
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
+const Manifest = require('the-traveler/build/Manifest').default;
+
+var sqlite3 = require('sqlite3').verbose();
+
 //Built-in requires
 var fs = require('fs');                                             // used to read helpNotes.txt
 var os = require('os');                                             // os info lib built into node
@@ -65,7 +69,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case 'search':
-                searchForDestinyPlayer('crazycoffee')
+                searchForDestinyPlayer('')
                     .then((playerData) => {
                         bot.sendMessage({
                             to: channelID,
@@ -83,11 +87,14 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     })
                 break;
             case 'manifest':
-                downloadDestinyManifest()
-                    .then(message => {
+                queryTest();
+                break;
+            case 'clantest':
+                getClanWeeklyRewardStateData()
+                    .then((rewardData) => {
                         bot.sendMessage({
                             to: channelID,
-                            message: message
+                            message: JSON.stringify(rewardData, null, 2)
                         });
                     })
                 break;
@@ -98,7 +105,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 
 function searchForDestinyPlayer(playerArg) {
     return traveler
-        .searchDestinyPlayer('4', 'test')
+        .searchDestinyPlayer('-1', 'CrazyCoffee#1619')
         .then(player => {
             console.log(player);
             return player;
@@ -142,5 +149,44 @@ function downloadDestinyManifest() {
         })
         .catch(err => {
             return err;
+        })
+}
+
+function queryTest() {
+    traveler.getDestinyManifest().then(result => {
+        traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
+            const manifest = new Manifest(filepath);
+            manifest.queryManifest('SELECT * FROM DestinyMilestoneDefinition').then(queryResult => {
+                console.log(queryResult);
+            }).catch(err => {
+                console.log(err);
+            });
+        }).catch(err => {
+            console.log(err);
+        })
+    })
+}
+
+//create a Manifest instance to query for D2 data on items
+function createNewManifest() {
+    traveler.getDestinyManifest().then(result => {
+        traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
+            return new Manifest(filepath);
+        }).catch(err => {
+            console.log(err);
+        })
+    })
+}
+
+
+function queryManifest(query) {
+
+}
+
+function getClanWeeklyRewardStateData() {
+    return traveler.getClanWeeklyRewardState('2805234')
+        .then((data) => {
+            console.log(data.Response.rewards[0].entries);
+            return data.Response.rewards;
         })
 }
