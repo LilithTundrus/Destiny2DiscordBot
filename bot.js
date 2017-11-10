@@ -74,25 +74,23 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case 'searchplayer':
-            let playerName = message.substring(14)
+                let playerName = message.substring(14)
                 searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
-                        const embed = {
-                            title: 'aaaaaaaaaa',
-                            fields: [{
-                                name: 'playerStuff',
-                                value: JSON.stringify(playerData)
-                            }]
+                        let embed = {
+                            author: {
+                                name: bot.username 
+                            },
+                            color: 3447003,
+                            title: 'Player Info',
+                            description: JSON.stringify(playerData)
                         }
                         if (playerData.Response.length > 0) {
                             bot.sendMessage({
                                 to: channelID,
-                                message:'', 
-                                embed: {
-                                    color: 3447003,
-                                    description: "A very simple Embed!"
-                                  },
-                                  typing: true
+                                message: '',
+                                embed: embed,
+                                typing: true
                             });
                         } else {
                             bot.sendMessage({
