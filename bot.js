@@ -23,7 +23,7 @@ const traveler = new Traveler({                                     // Must be d
 
 
 var destinyManifest = createNewManifest();
-const ver = '0.0.003';
+const ver = '0.0.005';
 /*
 Notes:
 IF A URL ISN'T WORKING TRY ENCODING IT ASDF
@@ -73,13 +73,34 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     message: `Version: ${ver} Running on server: ${os.type()} ${os.hostname()} ${os.platform()} ${os.cpus()[0].model}`
                 });
                 break;
-            case 'search':
-                searchForDestinyPlayer('')
+            case 'searchplayer':
+            let playerName = message.substring(14)
+                searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
-                        bot.sendMessage({
-                            to: channelID,
-                            message: JSON.stringify(playerData)
-                        });
+                        const embed = {
+                            title: 'aaaaaaaaaa',
+                            fields: [{
+                                name: 'playerStuff',
+                                value: JSON.stringify(playerData)
+                            }]
+                        }
+                        if (playerData.Response.length > 0) {
+                            bot.sendMessage({
+                                to: channelID,
+                                message:'', 
+                                embed: {
+                                    color: 3447003,
+                                    description: "A very simple Embed!"
+                                  },
+                                  typing: true
+                            });
+                        } else {
+                            bot.sendMessage({
+                                to: channelID,
+                                message: `${playerName} not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
+                            });
+                        }
+
                     })
                 break;
             case 'ms':
@@ -108,9 +129,10 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     }
 });
 
-function searchForDestinyPlayer(playerArg) {
+function searchForDestinyPlayerPC(playerArg) {
+    let encodedPlayerArg = encodeURIComponent(playerArg)
     return traveler
-        .searchDestinyPlayer('4', 'CrazyCoffee%231619')
+        .searchDestinyPlayer('4', encodedPlayerArg)
         .then(player => {
             console.log(player);
             return player;
