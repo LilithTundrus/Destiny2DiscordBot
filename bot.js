@@ -60,6 +60,7 @@ var baseDiscordEmbed = {
     description: '',
 }
 
+
 bot.on('message', function (user, userID, channelID, message, evt) {
     if (message.substring(0, 1) == '%') {                           // Listen for messages that will start with `^`
         var args = message.substring(1).split(' ');
@@ -87,7 +88,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 aboutEmbed.fields =
                     [{
                         name: 'Process Info',
-                        value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB`,
+                        //CPU load average only works on unix/linux host 
+                        value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
                         inline: true
                     },
                     {
