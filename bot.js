@@ -87,7 +87,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case 'about':
-                return help(channelID);
+                return about(channelID);
                 break;
             case 'searchplayer':
                 let playerName = message.substring(14);
@@ -320,10 +320,8 @@ function formatTime(seconds) {
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
-
-function help(channelIDArg) {
-    //send the bot help message since this needs to be sent when invalid args are given
-    //set up embed
+function about(channelIDArg) {                                           //send the bot about message
+    //set up embed message
     let aboutEmbed = baseDiscordEmbed;
     aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
     aboutEmbed.color = 3447003;
@@ -358,4 +356,8 @@ function help(channelIDArg) {
         embed: aboutEmbed,
         typing: true
     });
+}
+
+function help(channelIDArg) {
+    
 }
