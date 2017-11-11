@@ -43,16 +43,6 @@ var bot = new Discord.Client({                                      // Initializ
     autorun: true
 });
 
-bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
-    console.log('Connected to Discord...');
-    console.log(`Logged in as: ${bot.username} - (${bot.id})`);
-    console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
-    bot.setPresence({                                               //make the bot 'play' soemthing
-        idle_since: null,
-        game: { name: 'Destiny 2' }
-    });
-});
-
 //embed message template
 var baseDiscordEmbed = {
     author: {
@@ -63,6 +53,16 @@ var baseDiscordEmbed = {
     title: '',
     description: '',
 };
+
+bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
+    console.log('Connected to Discord...');
+    console.log(`Logged in as: ${bot.username} - (${bot.id})`);
+    console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
+    bot.setPresence({                                               //make the bot 'play' soemthing
+        idle_since: null,
+        game: { name: 'Destiny 2' }
+    });
+});
 
 bot.on('message', function (user, userID, channelID, message, evt) {
     if (message.substring(0, 1) == '%') {                           // Listen for messages that will start with `^`
