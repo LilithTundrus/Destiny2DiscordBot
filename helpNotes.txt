@@ -1,1 +1,3 @@
-PLACEHOLDER
+**%about**
+
+Display information about the bot
