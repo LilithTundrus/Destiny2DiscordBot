@@ -1,6 +1,7 @@
 'use strict';                                                       // Allow less 'bad' code
 //custom requires/libs
 const config = require('./config.js');                              // Conifg/auth data
+const dsTemplates = require('./dsTemplates.js');                    // Templates for Discord messages
 //npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
 var request = require('request');                                   // Used to make call to WF worldState
@@ -222,7 +223,7 @@ function about(channelIDArg) {                                           // Send
 function help(channelIDArg) {                                           // Help message as a function due to it needing to be repeatedly called
     let helpMsg = fs.readFileSync('./helpNotes.txt');
     //set up embed message
-    var helpEmbed = baseDiscordEmbed;
+    var helpEmbed = new dsTemplates.baseDiscordEmbed;
     helpEmbed.title = '**Available Commands**';
     let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
     helpEmbed.description = helpString + helpMsg.toString();
