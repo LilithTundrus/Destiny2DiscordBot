@@ -74,10 +74,15 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             //make all of these an embed
             case 'help':                                            // Display the help file
                 let helpMsg = fs.readFileSync('./helpNotes.txt');
-                let helpEmbed = baseDiscordEmbed;
+                var helpEmbed = baseDiscordEmbed;
+                helpEmbed.title = '**Available Commands**';
+                let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
+                helpEmbed.description = helpString + helpMsg.toString();
                 bot.sendMessage({
                     to: channelID,
-                    message: '```' + helpMsg.toString() + '```'     //the ``` is there so discord treats it as monospace
+                    message: '',
+                    embed: helpEmbed,
+                    typing: true
                 });
                 break;
             case 'about':
