@@ -27,6 +27,7 @@ const ver = '0.0.007';                                              // Arbitrary
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
 - Current design goal is PC ONLY
+- Do everything that doesn't involve the DB first!
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: Clean up janky code
@@ -124,6 +125,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'searchplayer':
                 let playerName = message.substring(14);
+                //check for an actual arg
                 return searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
                         if (playerData.Response[0]) {
@@ -155,6 +157,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                             {
                                                 name: 'Account type',
                                                 value: 'PC',
+                                                inline: true
+                                            },
+                                            {
+                                                name: 'Most recent character light level (Alpha testing):',
+                                                value: lightLevel,
                                                 inline: true
                                             },
                                         ],
@@ -347,3 +354,7 @@ function formatTime(seconds) {
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
+
+function helpMsg(channelIDArg) {
+    //send the bot help message since this needs to be sent when invalid args are given
+}
