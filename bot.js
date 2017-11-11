@@ -12,7 +12,7 @@ var profilesType = Enums.ComponentType.Profiles;                    // Access th
 //Built-in requires
 var fs = require('fs');
 var os = require('os');                                             // OS info lib built into node for debugging
-// Before the bot starts up, set up a traveler Manifest to query for data
+// Before the bot starts up, set up the-traveler and a D2 Manifest to query for data
 const traveler = new Traveler({                                     // Must be defined before destinyManifest can be defined
     apikey: config.destiny2Token,
     userAgent: `Node ${process.version}`,                           // Used to identify your request to the API
@@ -20,18 +20,20 @@ const traveler = new Traveler({                                     // Must be d
 });
 //This doesn't work just yet
 var destinyManifest = createNewManifest();
+//other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.006';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.007';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
 - Current design goal is PC ONLY
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
-TODO: Clean up code
+TODO: Clean up janky code
 TODO: create config-template
 TODO: clean up currently working components and outline what they do
 TODO: make the embed template a class!
+TODO: fix declare organizations
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -58,8 +60,7 @@ var baseDiscordEmbed = {
     color: 3447003,
     title: '',
     description: '',
-}
-
+};
 
 bot.on('message', function (user, userID, channelID, message, evt) {
     if (message.substring(0, 1) == '%') {                           // Listen for messages that will start with `^`
@@ -73,6 +74,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             //make all of these an embed
             case 'help':                                            // Display the help file
                 let helpMsg = fs.readFileSync('./helpNotes.txt');
+                let helpEmbed = baseDiscordEmbed;
                 bot.sendMessage({
                     to: channelID,
                     message: '```' + helpMsg.toString() + '```'     //the ``` is there so discord treats it as monospace
@@ -84,7 +86,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
                 aboutEmbed.color = 3447003;
                 aboutEmbed.title = `${bot.username} ${ver}`;
-                aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--'
+                aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--';
                 aboutEmbed.fields =
                     [{
                         name: 'Process Info',
@@ -106,8 +108,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         name: 'PH',
                         value: 'PH',
                         inline: true
-                    },]
-                //`Version: ${ver} Running on server: ${os.type()} ${os.hostname()} ${os.platform()} ${os.cpus()[0].model}`
+                    },];
+
                 bot.sendMessage({
                     to: channelID,
                     message: '',
@@ -116,7 +118,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case 'searchplayer':
-                let playerName = message.substring(14)
+                let playerName = message.substring(14);
                 return searchForDestinyPlayerPC(playerName)
                     .then((playerData) => {
                         if (playerData.Response[0]) {
@@ -153,7 +155,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                         thumbnail: {
                                             url: emblemURL
                                         },
-                                    }
+                                    };
                                     bot.sendMessage({
                                         to: channelID,
                                         message: '',
@@ -162,13 +164,13 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                     });
                                 })
                                 .catch((err) => {
-
-                                })
+                                    console.log(err);
+                                });
                         } else {
                             //put an embed here as well!
                             let messageEmbed = baseDiscordEmbed;
-                            messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`
-                            messageEmbed.title = 'Error:'
+                            messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`;
+                            messageEmbed.title = 'Error:';
                             bot.sendMessage({
                                 to: channelID,
                                 message: '',
@@ -179,7 +181,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     })
                     .catch((err) => {
                         console.log(err);
-                    })
+                    });
                 break;
             case 'ms':
                 getMileStones()
@@ -188,10 +190,10 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             to: channelID,
                             message: mileStones
                         });
-                    })
+                    });
                 break;
             case 'manifest':
-                queryDestinyManifest('SELECT * FROM DestinyMilestoneDefinition')
+                queryDestinyManifest('SELECT * FROM DestinyMilestoneDefinition');
                 break;
             case 'clantest':
                 getClanWeeklyRewardStateData()
@@ -200,7 +202,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             to: channelID,
                             message: JSON.stringify(rewardData, null, 2)
                         });
-                    })
+                    });
                 break;
             // Just add any case commands here -- if you run into random crashes on bad commands, add a defualt handler
         }
@@ -214,7 +216,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
  * @returns {Promise}
  */
 function searchForDestinyPlayerPC(playerArg) {
-    let encodedPlayerArg = encodeURIComponent(playerArg)
+    let encodedPlayerArg = encodeURIComponent(playerArg);
     return traveler
         .searchDestinyPlayer('4', encodedPlayerArg)
         .then(player => {
@@ -223,7 +225,7 @@ function searchForDestinyPlayerPC(playerArg) {
         }).catch(err => {
             console.log(err);
             return err;
-        })
+        });
 }
 
 //this should be renamed since it's aggregating a lot of data from multiple D2 API endpoints
@@ -235,18 +237,18 @@ function getMileStones() {
             Object.keys(data.Response).forEach(function (key) {
                 console.log(key, data.Response[key].endDate);
                 console.log(key, data.Response[key]);
-                console.log('\n' + key)
+                console.log('\n' + key);
                 //once we have the hash(key) we can call the getMileStoneContent to get the rest of the data
                 return traveler.getPublicMilestoneContent(key)
                     .then(mileStoneData => {
                         console.log(mileStoneData.Response);
-                    })
+                    });
             });
             return JSON.stringify(data.Response).substring(0, 1000);
         })
         .catch(err => {
             console.log(err);
-        })
+        });
 }
 
 //get the API structure JSON --this will be important later
@@ -260,7 +262,7 @@ function downloadDestinyManifest() {
         })
         .catch(err => {
             return err;
-        })
+        });
 }
 
 function queryTest() {
@@ -274,8 +276,8 @@ function queryTest() {
             });
         }).catch(err => {
             console.log(err);
-        })
-    })
+        });
+    });
 }
 
 //create a Manifest instance to query for D2 data within the DB (super janky)
@@ -285,8 +287,8 @@ function createNewManifest() {
             return new Manifest(filepath);
         }).catch(err => {
             console.log(err);
-        })
-    })
+        });
+    });
 }
 
 //Not yet working/used
@@ -303,7 +305,7 @@ function getClanWeeklyRewardStateData() {
         .then((data) => {
             console.log(data.Response.rewards[0].entries);
             return data.Response.rewards;
-        })
+        });
 }
 
 function getPlayerProfile(destinyMembershipID) {
@@ -313,9 +315,9 @@ function getPlayerProfile(destinyMembershipID) {
             //console.log(profileData.Response.characters.data)
             var characterDataArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
-                console.log('\n' + key)
+                console.log('\n' + key);
                 //console.log(profileData.Response.characters.data[key])
-                characterDataArray.push(profileData.Response.characters.data[key])
+                characterDataArray.push(profileData.Response.characters.data[key]);
             });
             return characterDataArray;
             //TODO: determine the most recently played character/number of characters
@@ -330,7 +332,7 @@ function getPlayerProfile(destinyMembershipID) {
 
 //misc functions
 
-//format process.uptime
+//format process.uptime (or other UNIX long dates (probably))
 function formatTime(seconds) {
     function pad(s) {
         return (s < 10 ? '0' : '') + s;
