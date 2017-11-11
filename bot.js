@@ -132,6 +132,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             return getPlayerProfile(playerID)
                                 .then((playerCharData) => {
                                     var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
+                                    var lightLevel = playerCharData[0].light
                                     var embed = {
                                         author: {
                                             name: playerData.Response[0].displayName,
@@ -317,11 +318,10 @@ function getPlayerProfile(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
         .then((profileData) => {
             console.log(profileData);
-            //console.log(profileData.Response.characters.data)
             var characterDataArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
                 console.log('\n' + key);
-                //console.log(profileData.Response.characters.data[key])
+                console.log(profileData.Response.characters.data[key])
                 characterDataArray.push(profileData.Response.characters.data[key]);
             });
             return characterDataArray;
