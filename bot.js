@@ -9,6 +9,7 @@ var Traveler = require('the-traveler').default;                     // Destiny 2
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
 var profilesType = Enums.ComponentType.Profiles;                    // Access the-traveler enums
+//get character stat enums here
 //Built-in requires
 var fs = require('fs');
 var os = require('os');                                             // OS info lib built into node for debugging
