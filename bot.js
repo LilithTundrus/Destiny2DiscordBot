@@ -11,6 +11,7 @@ const Enums = require('the-traveler/build/enums');                  // Get type 
 const Manifest = require('the-traveler/build/Manifest').default;
 var profilesType = Enums.ComponentType.Profiles;                    // Access the-traveler enums
 //get character stat enums here
+
 //Built-in requires
 var fs = require('fs');
 var os = require('os');                                             // OS info lib built into node for debugging
@@ -44,17 +45,6 @@ var bot = new Discord.Client({                                      // Initializ
     token: config.discordToken,
     autorun: true
 });
-
-//embed message template
-var baseDiscordEmbed = {
-    author: {
-        name: bot.username,
-        icon_url: config.travelerIcon
-    },
-    color: 3447003,
-    title: '',
-    description: '',
-};
 
 bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
     console.log('Connected to Discord...');
@@ -140,7 +130,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                                 });
                         } else {
                             //put an embed here as well!
-                            let messageEmbed = baseDiscordEmbed;
+                            var messageEmbed = new dsTemplates.baseDiscordEmbed;
                             messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`;
                             messageEmbed.title = 'Error:';
                             bot.sendMessage({
@@ -184,7 +174,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 // #region discordMessageFunctions
 function about(channelIDArg) {                                           // Send the bot about message
     //set up embed message
-    let aboutEmbed = baseDiscordEmbed;
+    let aboutEmbed = new dsTemplates.baseDiscordEmbed;
     aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
     aboutEmbed.color = 3447003;
     aboutEmbed.title = `${bot.username} ${ver}`;
