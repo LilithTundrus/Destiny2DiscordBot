@@ -28,6 +28,7 @@ Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
 - Current design goal is PC ONLY
 - Do everything that doesn't involve the DB first!
+- Region comments should work in atom/VSCode
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: Clean up janky code
@@ -178,6 +179,64 @@ bot.on('message', function (user, userID, channelID, message, evt) {
     }
 });
 
+// #region discordMessageFunctions
+function about(channelIDArg) {                                           // Send the bot about message
+    //set up embed message
+    let aboutEmbed = baseDiscordEmbed;
+    aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
+    aboutEmbed.color = 3447003;
+    aboutEmbed.title = `${bot.username} ${ver}`;
+    aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--';
+    aboutEmbed.fields =
+        [{
+            name: 'Process Info',
+            //CPU load average only works on unix/linux host 
+            value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
+            inline: true
+        },
+        {
+            name: 'Uptime',
+            value: formatTime(process.uptime()),
+            inline: true
+        },
+        {
+            name: 'PH',
+            value: 'PH',
+            inline: true
+        },
+        {
+            name: 'PH',
+            value: 'PH',
+            inline: true
+        },];
+
+    bot.sendMessage({
+        to: channelIDArg,
+        message: '',
+        embed: aboutEmbed,
+        typing: true
+    });
+}
+
+function help(channelIDArg) {                                           // Help message as a function due to it needing to be repeatedly called
+    let helpMsg = fs.readFileSync('./helpNotes.txt');
+    //set up embed message
+    var helpEmbed = baseDiscordEmbed;
+    helpEmbed.title = '**Available Commands**';
+    let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
+    helpEmbed.description = helpString + helpMsg.toString();
+    bot.sendMessage({
+        to: channelIDArg,
+        message: '',
+        embed: helpEmbed,
+        typing: true
+    });
+}
+
+// #endregion
+
+// #region D2APIFunctions
+
 /**
  * search for a Battle.net (PC) player name and return the Destiny 2 API Account/Player data.
  * 
@@ -294,10 +353,9 @@ function getPlayerProfile(destinyMembershipID) {
             console.log(err);
         });
 }
+// #endregion
 
-
-
-//misc functions
+// #region miscFunctions
 
 //format process.uptime (or other UNIX long dates (probably))
 function formatTime(seconds) {
@@ -310,55 +368,5 @@ function formatTime(seconds) {
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
-function about(channelIDArg) {                                           //send the bot about message
-    //set up embed message
-    let aboutEmbed = baseDiscordEmbed;
-    aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
-    aboutEmbed.color = 3447003;
-    aboutEmbed.title = `${bot.username} ${ver}`;
-    aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--';
-    aboutEmbed.fields =
-        [{
-            name: 'Process Info',
-            //CPU load average only works on unix/linux host 
-            value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
-            inline: true
-        },
-        {
-            name: 'Uptime',
-            value: formatTime(process.uptime()),
-            inline: true
-        },
-        {
-            name: 'PH',
-            value: 'PH',
-            inline: true
-        },
-        {
-            name: 'PH',
-            value: 'PH',
-            inline: true
-        },];
+// #endregion
 
-    bot.sendMessage({
-        to: channelIDArg,
-        message: '',
-        embed: aboutEmbed,
-        typing: true
-    });
-}
-
-function help(channelIDArg) {                                           // Help message as a function due to it needing to be repeatedly called
-    let helpMsg = fs.readFileSync('./helpNotes.txt');
-    //set up embed message
-    var helpEmbed = baseDiscordEmbed;
-    helpEmbed.title = '**Available Commands**';
-    let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
-    helpEmbed.description = helpString + helpMsg.toString();
-    bot.sendMessage({
-        to: channelIDArg,
-        message: '',
-        embed: helpEmbed,
-        typing: true
-    });
-}
