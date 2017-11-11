@@ -87,7 +87,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case 'about':
-                return helpMsg(channelID);
+                return help(channelID);
                 break;
             case 'searchplayer':
                 let playerName = message.substring(14);
@@ -321,7 +321,7 @@ function formatTime(seconds) {
 }
 
 
-function helpMsg(channelIDArg) {
+function help(channelIDArg) {
     //send the bot help message since this needs to be sent when invalid args are given
     //set up embed
     let aboutEmbed = baseDiscordEmbed;
