@@ -74,17 +74,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         switch (cmd) {                                              // Bot needs to know if it will execute a command
             //make all of these an embed
             case 'help':                                            // Display the help file
-                let helpMsg = fs.readFileSync('./helpNotes.txt');
-                var helpEmbed = baseDiscordEmbed;
-                helpEmbed.title = '**Available Commands**';
-                let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
-                helpEmbed.description = helpString + helpMsg.toString();
-                bot.sendMessage({
-                    to: channelID,
-                    message: '',
-                    embed: helpEmbed,
-                    typing: true
-                });
+                return help(channelID);
                 break;
             case 'about':
                 return about(channelID);
@@ -358,6 +348,17 @@ function about(channelIDArg) {                                           //send 
     });
 }
 
-function help(channelIDArg) {
-    
+function help(channelIDArg) {                                           // Help message as a function due to it needing to be repeatedly called
+    let helpMsg = fs.readFileSync('./helpNotes.txt');
+    //set up embed message
+    var helpEmbed = baseDiscordEmbed;
+    helpEmbed.title = '**Available Commands**';
+    let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
+    helpEmbed.description = helpString + helpMsg.toString();
+    bot.sendMessage({
+        to: channelIDArg,
+        message: '',
+        embed: helpEmbed,
+        typing: true
+    });
 }
