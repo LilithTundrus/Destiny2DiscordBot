@@ -87,41 +87,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 });
                 break;
             case 'about':
-                //set up embed
-                let aboutEmbed = baseDiscordEmbed;
-                aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
-                aboutEmbed.color = 3447003;
-                aboutEmbed.title = `${bot.username} ${ver}`;
-                aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--';
-                aboutEmbed.fields =
-                    [{
-                        name: 'Process Info',
-                        //CPU load average only works on unix/linux host 
-                        value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
-                        inline: true
-                    },
-                    {
-                        name: 'Uptime',
-                        value: formatTime(process.uptime()),
-                        inline: true
-                    },
-                    {
-                        name: 'PH',
-                        value: 'PH',
-                        inline: true
-                    },
-                    {
-                        name: 'PH',
-                        value: 'PH',
-                        inline: true
-                    },];
-
-                bot.sendMessage({
-                    to: channelID,
-                    message: '',
-                    embed: aboutEmbed,
-                    typing: true
-                });
+                return helpMsg(channelID);
                 break;
             case 'searchplayer':
                 let playerName = message.substring(14);
@@ -357,4 +323,39 @@ function formatTime(seconds) {
 
 function helpMsg(channelIDArg) {
     //send the bot help message since this needs to be sent when invalid args are given
+    //set up embed
+    let aboutEmbed = baseDiscordEmbed;
+    aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
+    aboutEmbed.color = 3447003;
+    aboutEmbed.title = `${bot.username} ${ver}`;
+    aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--';
+    aboutEmbed.fields =
+        [{
+            name: 'Process Info',
+            //CPU load average only works on unix/linux host 
+            value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
+            inline: true
+        },
+        {
+            name: 'Uptime',
+            value: formatTime(process.uptime()),
+            inline: true
+        },
+        {
+            name: 'PH',
+            value: 'PH',
+            inline: true
+        },
+        {
+            name: 'PH',
+            value: 'PH',
+            inline: true
+        },];
+
+    bot.sendMessage({
+        to: channelIDArg,
+        message: '',
+        embed: aboutEmbed,
+        typing: true
+    });
 }
