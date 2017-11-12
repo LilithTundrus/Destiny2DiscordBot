@@ -34,10 +34,11 @@ Notes:
 - Region comments should work in atom/VSCode
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
-TODO: Clean up janky code
+TODO: init a DB (may be a while)
 TODO: create config-template
 TODO: clean up currently working components and outline what they do
 TODO: fix declare organizations
+TODO: figure out proper way to do Oauth (look at spirit's code)
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -237,10 +238,18 @@ function searchplayer(channelIDArg, playerName) {
             }
         })
         .catch((err) => {
-            console.log(err);
+            var messageEmbed = new dsTemplates.baseDiscordEmbed;
+            messageEmbed.description = 'I seem to be having an unknown problem. Try again later.';
+            messageEmbed.title = 'Error:';
+            bot.sendMessage({
+                to: channelIDArg,
+                message: '',
+                embed: messageEmbed,
+                typing: true
+            });
         });
+    console.log(err);
 }
-
 
 // #endregion
 
