@@ -483,12 +483,13 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((profileData) => {
             console.log(profileData);
+            console.log(profileData.Response.characterEquipment);
             var mostRecentCharacterObj;
             var characterDataArray = [];
             var dateComparisonArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
                 console.log('\n' + key);
-                console.log(profileData.Response.characters.data[key])
+                console.log(profileData.Response.characters.data[key]);
                 characterDataArray.push(profileData.Response.characters.data[key]);
                 dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
             });
@@ -497,10 +498,20 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
             var latestPlayedDate = getLatestDate(dateComparisonArray);
             characterDataArray.forEach((entry, index) => {
                 if (entry.dateLastPlayed == latestPlayedDate) {
-                    console.log('\nGot most recent character...')
+                    //get loadout
+                    Object.keys(profileData.Response.characterEquipment.data).forEach(function (key) {
+                        console.log('\n' + key);
+                        //we now have the proper character loadout
+                        if (key == entry.characterId) {
+                            console.log('AAAAAAA');
+                        }
+                        console.log(profileData.Response.characterEquipment.data[key].items);
+                        
+                    });
+                    console.log('\nGot most recent character...');
                     mostRecentCharacterObj = entry;
                 }
-            })
+            });
             return mostRecentCharacterObj;
         })
         .catch((err) => {
@@ -585,4 +596,3 @@ function timeDifference(current, previous) {
 }
 // #endregion
 
-    
