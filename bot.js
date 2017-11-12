@@ -166,13 +166,19 @@ function help(channelIDArg) {                                           // Help 
     });
 }
 
+/**
+ * Search for a player using the D2 API and send a Discord message based on the results
+ * 
+ * @param {string|number} channelIDArg 
+ * @param {string} playerName 
+ * @returns {Promise}
+ */
 function searchplayer(channelIDArg, playerName) {
     return searchForDestinyPlayerPC(playerName)
         .then((playerData) => {
             if (playerData.Response[0]) {
                 var playerID = playerData.Response[0].membershipId.toString();
-                // Get the extra stuff like their icon
-                return getPlayerProfile(playerID)
+                return getPlayerProfile(playerID)                                   // Get the extra stuff like their icon
                     .then((playerCharData) => {
                         var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
                         var lightLevel = playerCharData[0].light
