@@ -410,20 +410,6 @@ function getMileStones() {
         });
 }
 
-//get the API structure JSON --this will be important later
-function downloadDestinyManifest() {
-    return traveler.getDestinyManifest()
-        .then((manifest) => {
-            fs.writeFileSync('./manifest.json', JSON.stringify(manifest, null, 2));
-        })
-        .then(() => {
-            return 'Manifest written to file!';                     //return a success message
-        })
-        .catch(err => {
-            return err;
-        });
-}
-
 function queryTest() {
     traveler.getDestinyManifest().then(result => {
         traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
@@ -441,8 +427,8 @@ function queryTest() {
 
 //create a Manifest instance to query for D2 data within the DB (super janky)
 function createNewManifest() {
-    traveler.getDestinyManifest().then(result => {
-        traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
+    return traveler.getDestinyManifest().then(result => {
+        return traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
             return new Manifest(filepath);
         }).catch(err => {
             console.log(err);
@@ -509,10 +495,12 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
                         //we now have the proper character loadout
                         if (key == entry.characterId) {
                             console.log(profileData.Response.characterEquipment.data[key].items);
-                            traveler.getItem('4', destinyMembershipID.toString(), profileData.Response.characterEquipment.data[key].items[0].itemInstanceId, { components: [300, , 303, 304] })
+                            traveler.getItem('4', destinyMembershipID.toString(), profileData.Response.characterEquipment.data[key].items[0].itemInstanceId, { components: [300, 307, 303, 304] })
                                 .then((data) => {
-                                    console.log(data.Response)
-                                    console.log(data.Response.stats.data.stats[0])
+                                    console.log(data)
+                                    console.log(data.Response.stats.data)
+                                    console.log(data.Response.instance.data)
+                                    console.log(data.Response.item.data)
                                 })
                         }
                         //console.log(profileData.Response.characterEquipment.data[key].items);
