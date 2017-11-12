@@ -23,10 +23,14 @@ const traveler = new Traveler({                                     // Must be d
     debug: true
 });
 //This doesn't work just yet
-var destinyManifest = createNewManifest();
+var destinyManifest;
+createNewManifest()
+    .then((newDestinyManifest) => {
+        return destinyManifest = newDestinyManifest;
+    })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.008';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.009';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -35,7 +39,6 @@ Notes:
 - Region comments should work in atom/VSCode
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
-TODO: init a DB (may be a while)
 TODO: create config-template
 TODO: clean up currently working components and outline what they do
 TODO: fix declare organizations
@@ -43,6 +46,7 @@ TODO: figure out proper way to do Oauth (look at spirit's code)
 TODO: fully extend enumHelper
 TODO: move miscFunctions to /lib
 TODO: parse more data from the extra component endpoints in enum ComponentType
+TODO: fully abstracts now-working DB
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -117,8 +121,23 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     });
                 break;
+            //debugging command
             case 'manifest':
-                queryDestinyManifest('SELECT * FROM DestinyMilestoneDefinition');
+                var query = message.substring(10);
+                console.log('\n\n\n\n\n\n\n\n\n\n\n' + query)
+                queryDestinyManifest(query)
+                    .then((queryResult) => {
+                        var queryEmbed = new dsTemplates.baseDiscordEmbed;
+                        queryEmbed.description = queryResult[0].json.toString().substring(0, 1000)
+                        console.log(queryResult)
+                        bot.sendMessage({
+                            to: channelID,
+                            message: '',
+                            embed: queryEmbed,
+                            typing: true
+                        });
+                    });
+
                 break;
             case 'clantest':
                 getClanWeeklyRewardStateData()
@@ -427,19 +446,27 @@ function queryTest() {
 
 //create a Manifest instance to query for D2 data within the DB (super janky)
 function createNewManifest() {
-    return traveler.getDestinyManifest().then(result => {
-        return traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
-            return new Manifest(filepath);
-        }).catch(err => {
+    var promiseTail = Promise.resolve();
+    promiseTail = promiseTail
+        .then(() => {
+            return traveler.getDestinyManifest()
+                .then(result => {
+                    return traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content')
+                        .then(filepath => {
+                            return new Manifest(filepath);
+                        })
+                })
+        })
+        .catch(err => {
             console.log(err);
         });
-    });
+    return promiseTail;
 }
 
 //Not yet working/used
 function queryDestinyManifest(query) {
-    destinyManifest.queryManifest(query).then(queryResult => {
-        console.log(queryResult);
+    return destinyManifest.queryManifest(query).then(queryResult => {
+        return queryResult;
     }).catch(err => {
         console.log(err);
     });
