@@ -2,6 +2,7 @@
 //custom requires/libs
 const config = require('./config.js');                              // Conifg/auth data
 const dsTemplates = require('./dsTemplates.js');                    // Templates for Discord messages
+const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums
 //npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
 var request = require('request');                                   // Used to make call to WF worldState
@@ -282,24 +283,26 @@ function getProfile(channelIDArg, playerName) {
                 var playerID = playerData.Response[0].membershipId.toString();
                 return getMostRecentPlayedCharPC(playerID)                                   // Get the extra stuff like their icon
                     .then((playerCharData) => {
+                        //set up data and use enums to get coded data (Gender/Etc.)
                         var emblemURL = destiny2BaseURL + playerCharData.emblemPath;
-                        var lightLevel = playerCharData.light
+                        var lightLevel = playerCharData.light;
+                        let playerLevel = playerCharData.baseCharacterLevel;
+                        let playerGender = enumHelper.getDestinyGenderString(playerCharData.genderType);
                         var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
                         searchPlayerEmbed.author = {
                             name: playerData.Response[0].displayName,
                             icon_url: 'http://i.imgur.com/tZvXxcu.png'
                         }
                         searchPlayerEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
-
-                        searchPlayerEmbed.description = `Level LEVEL GENDER, CLASS | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
+                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerGender}, CLASS | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
                         searchPlayerEmbed.fields = [
                             {
-                                name: 'Account type',
+                                name: 'PH',
                                 value: 'PC',
                                 inline: true
                             },
                             {
-                                name: 'Most recent character light level (Alpha testing):',
+                                name: 'PH',
                                 value: lightLevel,
                                 inline: true
                             },
@@ -494,6 +497,7 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
 
 }
 // #endregion
+
 
 // #region miscFunctions
 
