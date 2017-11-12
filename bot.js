@@ -41,6 +41,8 @@ TODO: clean up currently working components and outline what they do
 TODO: fix declare organizations
 TODO: figure out proper way to do Oauth (look at spirit's code)
 TODO: fully extend enumHelper
+TODO: move miscFunctions to /lib
+TODO: parse more data from the extra component endpoints in enum ComponentType
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -478,7 +480,7 @@ function getPlayerProfile(destinyMembershipID) {
 }
 
 function getMostRecentPlayedCharPC(destinyMembershipID) {
-    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
+    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((profileData) => {
             console.log(profileData);
             var mostRecentCharacterObj;
