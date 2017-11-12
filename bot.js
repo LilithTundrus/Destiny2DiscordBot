@@ -585,3 +585,4 @@ function timeDifference(current, previous) {
 }
 // #endregion
 
+    
