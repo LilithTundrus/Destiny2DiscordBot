@@ -40,6 +40,7 @@ TODO: create config-template
 TODO: clean up currently working components and outline what they do
 TODO: fix declare organizations
 TODO: figure out proper way to do Oauth (look at spirit's code)
+TODO: fully extend enumHelper
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -288,29 +289,38 @@ function getProfile(channelIDArg, playerName) {
                         var lightLevel = playerCharData.light;
                         let playerLevel = playerCharData.baseCharacterLevel;
                         let playerGender = enumHelper.getDestinyGenderString(playerCharData.genderType);
+                        let playerClass = enumHelper.getDestinyClassString(playerCharData.classType);
+                        let playerRace = enumHelper.getDestinyRaceString(playerCharData.raceType)
+                        let timePlayed = convertMinsToHrsMins(playerCharData.minutesPlayedTotal);
+                        let lastPlayedDate = new Date(playerCharData.dateLastPlayed);
+                        let lastOnline = timeDifference(Date.now(), lastPlayedDate)
                         var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
                         searchPlayerEmbed.author = {
                             name: playerData.Response[0].displayName,
                             icon_url: 'http://i.imgur.com/tZvXxcu.png'
                         }
                         searchPlayerEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
-                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerGender}, CLASS | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
+                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerGender} ${playerClass} | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
                         searchPlayerEmbed.fields = [
                             {
-                                name: 'PH',
-                                value: 'PC',
+                                name: 'Race',
+                                value: playerRace,
                                 inline: true
                             },
                             {
-                                name: 'PH',
-                                value: lightLevel,
+                                name: 'Time played on character',
+                                value: timePlayed,
+                                inline: true
+                            },
+                            {
+                                name: 'Last online',
+                                value: lastOnline,
                                 inline: true
                             },
                         ];
                         searchPlayerEmbed.thumbnail = {
                             url: emblemURL
                         };
-
                         bot.sendMessage({
                             to: channelIDArg,
                             message: '',
@@ -512,7 +522,6 @@ function formatTime(seconds) {
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
-
 function getLatestDate(data) {
     var sorted = data.map(function (item) {
         var MeasureDate = item.MeasureDate;
@@ -528,6 +537,49 @@ function getLatestDate(data) {
     var latest = sorted[0];
 
     return latest.original_str;
+}
+
+/**
+ * 
+ * 
+ * @param {number} mins 
+ * @returns {string}
+ */
+function convertMinsToHrsMins(mins) {
+    let h = Math.floor(mins / 60);
+    let m = mins % 60;
+    h = h < 10 ? '0' + h : h;
+    m = m < 10 ? '0' + m : m;
+    return `${h} Hours ${m} Minutes`;
+}
+
+
+function timeDifference(current, previous) {
+
+    var msPerMinute = 60 * 1000;
+    var msPerHour = msPerMinute * 60;
+    var msPerDay = msPerHour * 24;
+    var msPerMonth = msPerDay * 30;
+    var msPerYear = msPerDay * 365;
+    var elapsed = current - previous;
+    if (elapsed < msPerMinute) {
+        return Math.round(elapsed / 1000) + ' seconds ago';
+    }
+    else if (elapsed < msPerHour) {
+        return Math.round(elapsed / msPerMinute) + ' minutes ago';
+    }
+    else if (elapsed < msPerDay) {
+        return Math.round(elapsed / msPerHour) + ' hours ago';
+    }
+    else if (elapsed < msPerMonth) {
+        return 'approximately ' + Math.round(elapsed / msPerDay) + ' days ago';
+    }
+    else if (elapsed < msPerYear) {
+        return 'approximately ' + Math.round(elapsed / msPerMonth) + ' months ago';
+    }
+    else {
+        return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
+    }
 }
 // #endregion
 
