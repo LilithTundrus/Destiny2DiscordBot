@@ -77,49 +77,47 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     .then((playerData) => {
                         if (playerData.Response[0]) {
                             var playerID = playerData.Response[0].membershipId.toString();
-                            //get the extra stuff like their icon
+                            // Get the extra stuff like their icon
                             return getPlayerProfile(playerID)
                                 .then((playerCharData) => {
                                     var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
                                     var lightLevel = playerCharData[0].light
-                                    var embed = {
-                                        author: {
-                                            name: playerData.Response[0].displayName,
-                                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                                    var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
+                                    searchPlayerEmbed.author = {
+                                        name: playerData.Response[0].displayName,
+                                        icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                                    }
+                                    searchPlayerEmbed.title = 'Account/Player Info';
+                                    searchPlayerEmbed.description = 'All current available account info from search endpoint';
+                                    searchPlayerEmbed.fields = [
+                                        {
+                                            name: '\nPlayer ID',
+                                            value: playerData.Response[0].membershipId,
+                                            inline: true
                                         },
-                                        color: 3447003,
-                                        title: 'Account/Player Info',
-                                        description: 'All current available account info from search endpoint',
-                                        fields: [
-                                            {
-                                                name: '\nPlayer ID',
-                                                value: playerData.Response[0].membershipId,
-                                                inline: true
-                                            },
-                                            {
-                                                name: 'Display Name',
-                                                value: playerData.Response[0].displayName,
-                                                inline: true
-                                            },
-                                            {
-                                                name: 'Account type',
-                                                value: 'PC',
-                                                inline: true
-                                            },
-                                            {
-                                                name: 'Most recent character light level (Alpha testing):',
-                                                value: lightLevel,
-                                                inline: true
-                                            },
-                                        ],
-                                        thumbnail: {
-                                            url: emblemURL
+                                        {
+                                            name: 'Display Name',
+                                            value: playerData.Response[0].displayName,
+                                            inline: true
                                         },
+                                        {
+                                            name: 'Account type',
+                                            value: 'PC',
+                                            inline: true
+                                        },
+                                        {
+                                            name: 'Most recent character light level (Alpha testing):',
+                                            value: lightLevel,
+                                            inline: true
+                                        },
+                                    ];
+                                    searchPlayerEmbed.thumbnail = {
+                                        url: emblemURL
                                     };
                                     bot.sendMessage({
                                         to: channelID,
                                         message: '',
-                                        embed: embed,
+                                        embed: searchPlayerEmbed,
                                         typing: true
                                     });
                                 })
