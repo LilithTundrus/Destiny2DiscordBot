@@ -37,7 +37,6 @@ TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: Clean up janky code
 TODO: create config-template
 TODO: clean up currently working components and outline what they do
-TODO: make the embed template a class!
 TODO: fix declare organizations
 */
 
@@ -65,7 +64,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         console.log(`${user} sent: ${message} at ${new Date().toISOString()}`);
         args = args.splice(1);
         switch (cmd) {                                              // Bot needs to know if it will execute a command
-            //make all of these an embed
             case 'help':                                            // Display the help file
                 return help(channelID);
                 break;
