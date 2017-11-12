@@ -71,6 +71,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'about':
                 return about(channelID);
                 break;
+            //mostly for debugging
             case 'searchplayer':
                 if (message.length < 14 || message.trim().length < 14) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
@@ -85,6 +86,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 } else {
                     let playerName = message.substring(14);
                     return searchplayer(channelID, playerName);
+                }
+                break;
+            case 'profile':
+                if (message.length < 14 || message.trim().length < 14) {
+                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                    errMessageEmbed.description = `Please provide an argument`;
+                    errMessageEmbed.title = 'Error:';
+                    bot.sendMessage({
+                        to: channelID,
+                        message: '',
+                        embed: errMessageEmbed,
+                        typing: true
+                    });
+                } else {
+                    let playerName = message.substring(14);
+                    return getProfile(channelID, playerName);
                 }
                 break;
             case 'ms':
@@ -108,7 +125,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     });
                 break;
-            // Just add any case commands here -- if you run into random crashes on bad commands, add a defualt handler
+            // Just add any case commands here
         }
     }
 });
@@ -247,8 +264,92 @@ function searchplayer(channelIDArg, playerName) {
                 embed: messageEmbed,
                 typing: true
             });
+            console.log(err);
         });
-    console.log(err);
+}
+
+/**
+ * Get a profile of the most recent character played by a battle.net accunt if it exists
+ * 
+ * @param {string|number} channelIDArg 
+ * @param {string} playerName 
+ * @returns {Promise}
+ */
+function getProfile(channelIDArg, playerName) {
+    return searchForDestinyPlayerPC(playerName)
+        .then((playerData) => {
+            if (playerData.Response[0]) {
+                var playerID = playerData.Response[0].membershipId.toString();
+                return getMostRecentPlayedCharPC(playerID)                                   // Get the extra stuff like their icon
+                    .then((playerCharData) => {
+                        var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
+                        var lightLevel = playerCharData[0].light
+                        var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
+                        searchPlayerEmbed.author = {
+                            name: playerData.Response[0].displayName,
+                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                        }
+                        searchPlayerEmbed.title = 'Account/Player Info';
+                        searchPlayerEmbed.description = 'All current available account info from search endpoint';
+                        searchPlayerEmbed.fields = [
+                            {
+                                name: '\nPlayer ID',
+                                value: playerData.Response[0].membershipId,
+                                inline: true
+                            },
+                            {
+                                name: 'Display Name',
+                                value: playerData.Response[0].displayName,
+                                inline: true
+                            },
+                            {
+                                name: 'Account type',
+                                value: 'PC',
+                                inline: true
+                            },
+                            {
+                                name: 'Most recent character light level (Alpha testing):',
+                                value: lightLevel,
+                                inline: true
+                            },
+                        ];
+                        searchPlayerEmbed.thumbnail = {
+                            url: emblemURL
+                        };
+                        bot.sendMessage({
+                            to: channelIDArg,
+                            message: '',
+                            embed: searchPlayerEmbed,
+                            typing: true
+                        });
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            } else {
+                var messageEmbed = new dsTemplates.baseDiscordEmbed;
+                messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`;
+                messageEmbed.title = 'Error:';
+                bot.sendMessage({
+                    to: channelIDArg,
+                    message: '',
+                    embed: messageEmbed,
+                    typing: true
+                });
+            }
+        })
+        .catch((err) => {
+            var messageEmbed = new dsTemplates.baseDiscordEmbed;
+            messageEmbed.description = 'I seem to be having an unknown problem. Try again later.';
+            messageEmbed.title = 'Error:';
+            bot.sendMessage({
+                to: channelIDArg,
+                message: '',
+                embed: messageEmbed,
+                typing: true
+            });
+            console.log(err);
+        });
 }
 
 // #endregion
@@ -365,11 +466,32 @@ function getPlayerProfile(destinyMembershipID) {
                 characterDataArray.push(profileData.Response.characters.data[key]);
             });
             return characterDataArray;
-            //TODO: determine the most recently played character/number of characters
         })
         .catch((err) => {
             console.log(err);
         });
+}
+
+function getMostRecentPlayedCharPC(destinyMembershipID) {
+    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
+        .then((profileData) => {
+            console.log(profileData);
+            var characterDataArray = [];
+            var dateComparisonArray = [];
+            Object.keys(profileData.Response.characters.data).forEach(function (key) {
+                console.log('\n' + key);
+                console.log(profileData.Response.characters.data[key])
+                characterDataArray.push(profileData.Response.characters.data[key]);
+                dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
+            });
+            console.log(getLatestDate(dateComparisonArray).toISOString())
+            //compare the character's last played dates to get the most rcent character
+            // /return characterDataArray;
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+
 }
 // #endregion
 
@@ -386,5 +508,16 @@ function formatTime(seconds) {
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
+
+function getLatestDate(data) {
+    // convert to timestamp and sort
+    var sorted_ms = data.map(function (item) {
+        return new Date(item.MeasureDate).getTime()
+    }).sort();
+    // take latest
+    var latest_ms = sorted_ms[sorted_ms.length - 1];
+    // convert to js date object 
+    return new Date(latest_ms);
+}
 // #endregion
 
