@@ -22,7 +22,7 @@ const traveler = new Traveler({                                     // Must be d
     userAgent: `Node ${process.version}`,                           // Used to identify your request to the API
     debug: true
 });
-//This doesn't work just yet
+// Init the Destiny 2 DB to call for hash IDs on items/basically anything hased
 var destinyManifest;
 createNewManifest()
     .then((newDestinyManifest) => {
@@ -429,20 +429,6 @@ function getMileStones() {
         });
 }
 
-function queryTest() {
-    traveler.getDestinyManifest().then(result => {
-        traveler.downloadManifest(result.Response.mobileWorldContentPaths.en, './manifest.content').then(filepath => {
-            const manifest = new Manifest(filepath);
-            manifest.queryManifest('SELECT * FROM DestinyMilestoneDefinition').then(queryResult => {
-                console.log(queryResult);
-            }).catch(err => {
-                console.log(err);
-            });
-        }).catch(err => {
-            console.log(err);
-        });
-    });
-}
 
 //create a Manifest instance to query for D2 data within the DB (super janky)
 function createNewManifest() {
