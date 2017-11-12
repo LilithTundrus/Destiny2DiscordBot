@@ -71,7 +71,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 return about(channelID);
                 break;
             case 'searchplayer':
-                if (message.length < 14) {
+                if (message.length < 14 || message.trim().length < 14) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                     errMessageEmbed.description = `Please provide an argument`;
                     errMessageEmbed.title = 'Error:';
