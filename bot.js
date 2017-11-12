@@ -25,7 +25,7 @@ const traveler = new Traveler({                                     // Must be d
 var destinyManifest = createNewManifest();
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.007';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.008';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -89,7 +89,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 }
                 break;
             case 'profile':
-                if (message.length < 14 || message.trim().length < 14) {
+                if (message.length < 9 || message.trim().length < 9) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                     errMessageEmbed.description = `Please provide an argument`;
                     errMessageEmbed.title = 'Error:';
@@ -100,7 +100,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         typing: true
                     });
                 } else {
-                    let playerName = message.substring(14);
+                    let playerName = message.substring(9);
                     return getProfile(channelID, playerName);
                 }
                 break;
@@ -282,26 +282,17 @@ function getProfile(channelIDArg, playerName) {
                 var playerID = playerData.Response[0].membershipId.toString();
                 return getMostRecentPlayedCharPC(playerID)                                   // Get the extra stuff like their icon
                     .then((playerCharData) => {
-                        var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
-                        var lightLevel = playerCharData[0].light
+                        var emblemURL = destiny2BaseURL + playerCharData.emblemPath;
+                        var lightLevel = playerCharData.light
                         var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
                         searchPlayerEmbed.author = {
                             name: playerData.Response[0].displayName,
                             icon_url: 'http://i.imgur.com/tZvXxcu.png'
                         }
-                        searchPlayerEmbed.title = 'Account/Player Info';
-                        searchPlayerEmbed.description = 'All current available account info from search endpoint';
+                        searchPlayerEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
+
+                        searchPlayerEmbed.description = `Level LEVEL GENDER, CLASS | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
                         searchPlayerEmbed.fields = [
-                            {
-                                name: '\nPlayer ID',
-                                value: playerData.Response[0].membershipId,
-                                inline: true
-                            },
-                            {
-                                name: 'Display Name',
-                                value: playerData.Response[0].displayName,
-                                inline: true
-                            },
                             {
                                 name: 'Account type',
                                 value: 'PC',
@@ -316,6 +307,7 @@ function getProfile(channelIDArg, playerName) {
                         searchPlayerEmbed.thumbnail = {
                             url: emblemURL
                         };
+
                         bot.sendMessage({
                             to: channelIDArg,
                             message: '',
@@ -476,6 +468,7 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
         .then((profileData) => {
             console.log(profileData);
+            var mostRecentCharacterObj;
             var characterDataArray = [];
             var dateComparisonArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
@@ -484,9 +477,16 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
                 characterDataArray.push(profileData.Response.characters.data[key]);
                 dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
             });
-            console.log(getLatestDate(dateComparisonArray).toISOString())
+            //this is bad but it's all I have for now..
             //compare the character's last played dates to get the most rcent character
-            // /return characterDataArray;
+            var latestPlayedDate = getLatestDate(dateComparisonArray);
+            characterDataArray.forEach((entry, index) => {
+                if (entry.dateLastPlayed == latestPlayedDate) {
+                    console.log('\nGot most recent character...')
+                    mostRecentCharacterObj = entry;
+                }
+            })
+            return mostRecentCharacterObj;
         })
         .catch((err) => {
             console.log(err);
@@ -510,14 +510,20 @@ function formatTime(seconds) {
 
 
 function getLatestDate(data) {
-    // convert to timestamp and sort
-    var sorted_ms = data.map(function (item) {
-        return new Date(item.MeasureDate).getTime()
-    }).sort();
+    var sorted = data.map(function (item) {
+        var MeasureDate = item.MeasureDate;
+        return {
+            original_str: MeasureDate,
+            in_ms: (new Date(MeasureDate)).getTime()
+        }
+    }).sort(function (item1, item2) {
+        return (item1.in_ms < item2.in_ms)
+    });
+
     // take latest
-    var latest_ms = sorted_ms[sorted_ms.length - 1];
-    // convert to js date object 
-    return new Date(latest_ms);
+    var latest = sorted[0];
+
+    return latest.original_str;
 }
 // #endregion
 
