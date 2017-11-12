@@ -302,13 +302,8 @@ function getProfile(channelIDArg, playerName) {
                             icon_url: 'http://i.imgur.com/tZvXxcu.png'
                         }
                         searchPlayerEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
-                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerGender} ${playerClass} | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
+                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerRace} ${playerGender} ${playerClass} | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
                         searchPlayerEmbed.fields = [
-                            {
-                                name: 'Race',
-                                value: playerRace,
-                                inline: true
-                            },
                             {
                                 name: 'Time played on character',
                                 value: timePlayed,
@@ -317,6 +312,16 @@ function getProfile(channelIDArg, playerName) {
                             {
                                 name: 'Last online',
                                 value: lastOnline,
+                                inline: true
+                            },
+                            {
+                                name: 'Weapons',
+                                value: '**Kinetic:** PH\n**Energy:** PH\n**Power:** PH',
+                                inline: true
+                            },
+                            {
+                                name: 'Armor',
+                                value: '**Head:** PH\n**Arms:** PH\n**Chest:** PH\n**Legs:** PH\n**Class Item:** PH',
                                 inline: true
                             },
                         ];
@@ -503,10 +508,15 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
                         console.log('\n' + key);
                         //we now have the proper character loadout
                         if (key == entry.characterId) {
-                            console.log('AAAAAAA');
+                            console.log(profileData.Response.characterEquipment.data[key].items);
+                            traveler.getItem('4', destinyMembershipID.toString(), profileData.Response.characterEquipment.data[key].items[0].itemInstanceId, { components: [300, , 303, 304] })
+                                .then((data) => {
+                                    console.log(data.Response)
+                                    console.log(data.Response.stats.data.stats[0])
+                                })
                         }
-                        console.log(profileData.Response.characterEquipment.data[key].items);
-                        
+                        //console.log(profileData.Response.characterEquipment.data[key].items);
+
                     });
                     console.log('\nGot most recent character...');
                     mostRecentCharacterObj = entry;
