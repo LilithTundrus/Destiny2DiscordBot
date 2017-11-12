@@ -49,7 +49,7 @@ bot.on('ready', function (evt) {                                    // Do some l
     console.log('Connected to Discord...');
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
-    bot.setPresence({                                               //make the bot 'play' soemthing
+    bot.setPresence({                                               // Make the bot 'play' soemthing
         idle_since: null,
         game: { name: 'Destiny 2' }
     });
@@ -83,75 +83,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     });
                 } else {
                     let playerName = message.substring(14);
-                    //check for an actual arg
-                    return searchForDestinyPlayerPC(playerName)
-                        .then((playerData) => {
-                            if (playerData.Response[0]) {
-                                var playerID = playerData.Response[0].membershipId.toString();
-                                // Get the extra stuff like their icon
-                                return getPlayerProfile(playerID)
-                                    .then((playerCharData) => {
-                                        var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
-                                        var lightLevel = playerCharData[0].light
-                                        var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
-                                        searchPlayerEmbed.author = {
-                                            name: playerData.Response[0].displayName,
-                                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
-                                        }
-                                        searchPlayerEmbed.title = 'Account/Player Info';
-                                        searchPlayerEmbed.description = 'All current available account info from search endpoint';
-                                        searchPlayerEmbed.fields = [
-                                            {
-                                                name: '\nPlayer ID',
-                                                value: playerData.Response[0].membershipId,
-                                                inline: true
-                                            },
-                                            {
-                                                name: 'Display Name',
-                                                value: playerData.Response[0].displayName,
-                                                inline: true
-                                            },
-                                            {
-                                                name: 'Account type',
-                                                value: 'PC',
-                                                inline: true
-                                            },
-                                            {
-                                                name: 'Most recent character light level (Alpha testing):',
-                                                value: lightLevel,
-                                                inline: true
-                                            },
-                                        ];
-                                        searchPlayerEmbed.thumbnail = {
-                                            url: emblemURL
-                                        };
-                                        bot.sendMessage({
-                                            to: channelID,
-                                            message: '',
-                                            embed: searchPlayerEmbed,
-                                            typing: true
-                                        });
-                                    })
-                                    .catch((err) => {
-                                        console.log(err);
-                                    });
-                            } else {
-                                var messageEmbed = new dsTemplates.baseDiscordEmbed;
-                                messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`;
-                                messageEmbed.title = 'Error:';
-                                bot.sendMessage({
-                                    to: channelID,
-                                    message: '',
-                                    embed: messageEmbed,
-                                    typing: true
-                                });
-                            }
-                        })
-                        .catch((err) => {
-                            console.log(err);
-                        });
+                    return searchplayer(channelID, playerName);
                 }
-
                 break;
             case 'ms':
                 getMileStones()
@@ -232,6 +165,76 @@ function help(channelIDArg) {                                           // Help 
         typing: true
     });
 }
+
+function searchplayer(channelIDArg, playerName) {
+    return searchForDestinyPlayerPC(playerName)
+        .then((playerData) => {
+            if (playerData.Response[0]) {
+                var playerID = playerData.Response[0].membershipId.toString();
+                // Get the extra stuff like their icon
+                return getPlayerProfile(playerID)
+                    .then((playerCharData) => {
+                        var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
+                        var lightLevel = playerCharData[0].light
+                        var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
+                        searchPlayerEmbed.author = {
+                            name: playerData.Response[0].displayName,
+                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                        }
+                        searchPlayerEmbed.title = 'Account/Player Info';
+                        searchPlayerEmbed.description = 'All current available account info from search endpoint';
+                        searchPlayerEmbed.fields = [
+                            {
+                                name: '\nPlayer ID',
+                                value: playerData.Response[0].membershipId,
+                                inline: true
+                            },
+                            {
+                                name: 'Display Name',
+                                value: playerData.Response[0].displayName,
+                                inline: true
+                            },
+                            {
+                                name: 'Account type',
+                                value: 'PC',
+                                inline: true
+                            },
+                            {
+                                name: 'Most recent character light level (Alpha testing):',
+                                value: lightLevel,
+                                inline: true
+                            },
+                        ];
+                        searchPlayerEmbed.thumbnail = {
+                            url: emblemURL
+                        };
+                        bot.sendMessage({
+                            to: channelIDArg,
+                            message: '',
+                            embed: searchPlayerEmbed,
+                            typing: true
+                        });
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            } else {
+                var messageEmbed = new dsTemplates.baseDiscordEmbed;
+                messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`;
+                messageEmbed.title = 'Error:';
+                bot.sendMessage({
+                    to: channelIDArg,
+                    message: '',
+                    embed: messageEmbed,
+                    typing: true
+                });
+            }
+        })
+        .catch((err) => {
+            console.log(err);
+        });
+}
+
 
 // #endregion
 
