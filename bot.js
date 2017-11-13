@@ -110,7 +110,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     });
                 } else {
                     let playerName = message.substring(9);
-                    return getProfile(channelID, playerName);
+                    getProfile(channelID, playerName);
                 }
                 break;
             case 'ms':
@@ -138,7 +138,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                             typing: true
                         });
                     });
-
                 break;
             case 'clantest':
                 getClanWeeklyRewardStateData()
@@ -149,6 +148,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     });
                 break;
+            case 'prfoilealt':
+            if (message.length < 12 || message.trim().length < 12) {
+                var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                errMessageEmbed.description = `Please provide an argument`;
+                errMessageEmbed.title = 'Error:';
+                bot.sendMessage({
+                    to: channelID,
+                    message: '',
+                    embed: errMessageEmbed,
+                    typing: true
+                });
+            } else {
+                let playerName = message.substring(9);
+                getProfile(channelID, playerName);
+            }
+            break;
             // Just add any case commands here
         }
     }
@@ -525,6 +540,7 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
                 var latestPlayedDate = getLatestDate(dateComparisonArray);
                 characterDataArray.forEach((entry, index) => {
                     if (entry.dateLastPlayed == latestPlayedDate) {
+                        //return player character data here!
                         //get loadout
                         Object.keys(profileData.Response.characterEquipment.data).forEach(function (key) {
                             console.log('\n' + key);
