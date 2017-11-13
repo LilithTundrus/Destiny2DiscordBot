@@ -110,7 +110,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     });
                 } else {
                     let playerName = message.substring(9);
-                    getProfile(channelID, playerName);
+                    return getProfile(channelID, playerName);
                 }
                 break;
             case 'ms':
@@ -148,22 +148,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     });
                 break;
-            case 'prfoilealt':
-            if (message.length < 12 || message.trim().length < 12) {
-                var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                errMessageEmbed.description = `Please provide an argument`;
-                errMessageEmbed.title = 'Error:';
-                bot.sendMessage({
-                    to: channelID,
-                    message: '',
-                    embed: errMessageEmbed,
-                    typing: true
-                });
-            } else {
-                let playerName = message.substring(9);
-                getProfile(channelID, playerName);
-            }
-            break;
+            case 'profilealt':
+                if (message.length < 12 || message.trim().length < 12) {
+                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                    errMessageEmbed.description = `Please provide an argument`;
+                    errMessageEmbed.title = 'Error:';
+                    bot.sendMessage({
+                        to: channelID,
+                        message: '',
+                        embed: errMessageEmbed,
+                        typing: true
+                    });
+                } else {
+                    let playerName = message.substring(12);
+                    return getProfileAlt(channelID, playerName);
+                }
+                break;
             // Just add any case commands here
         }
     }
@@ -402,6 +402,104 @@ function getProfile(channelIDArg, playerName) {
         });
 }
 
+/**
+ * Get a profile of the most recent character played by a battle.net accunt if it exists
+ * 
+ * @param {string|number} channelIDArg 
+ * @param {string} playerName 
+ * @returns {Promise}
+ */
+function getProfileAlt(channelIDArg, playerName) {
+    return searchForDestinyPlayerPC(playerName)                     // find the player's ID (by name)
+        .then((playerData) => {
+            if (playerData.Response[0]) {
+                var playerID = playerData.Response[0].membershipId.toString();
+                return getMostRecentPlayedCharDataPCAlt(playerID)                                   // Get the extra stuff like their icon
+                    .then((playerCharData) => {
+                        console.log('PC Recent player call finished..');
+                        /*
+                        //set up data and use enums to get coded data (Gender/Etc.)
+                        var emblemURL = destiny2BaseURL + playerCharData[0][0].emblemPath;
+                        var lightLevel = playerCharData[0][0].light;
+                        let playerLevel = playerCharData[0][0].baseCharacterLevel;
+                        let playerGender = enumHelper.getDestinyGenderString(playerCharData[0][0].genderType);
+                        let playerClass = enumHelper.getDestinyClassString(playerCharData[0][0].classType);
+                        let playerRace = enumHelper.getDestinyRaceString(playerCharData[0][0].raceType);
+                        let timePlayed = convertMinsToHrsMins(playerCharData[0][0].minutesPlayedTotal);
+                        let lastPlayedDate = new Date(playerCharData[0][0].dateLastPlayed);
+                        let lastOnline = timeDifference(Date.now(), lastPlayedDate);
+                        let playerKineticWeapon = playerCharData[1]
+                        console.log(playerKineticWeapon);
+                        var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
+                        searchPlayerEmbed.author = {
+                            name: playerData.Response[0].displayName,
+                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                        }
+                        searchPlayerEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
+                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerRace} ${playerGender} ${playerClass} | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
+                        searchPlayerEmbed.fields = [
+                            {
+                                name: 'Time played on character',
+                                value: timePlayed,
+                                inline: true
+                            },
+                            {
+                                name: 'Last online',
+                                value: lastOnline,
+                                inline: true
+                            },
+                            {
+                                name: 'Weapons',
+                                value: `**Kinetic:** ${playerKineticWeapon}\n**Energy:** PH\n**Power:** PH`,
+                                inline: true
+                            },
+                            {
+                                name: 'Armor',
+                                value: '**Head:** PH\n**Arms:** PH\n**Chest:** PH\n**Legs:** PH\n**Class Item:** PH',
+                                inline: true
+                            },
+                        ];
+                        searchPlayerEmbed.thumbnail = {
+                            url: emblemURL
+                        };
+                        bot.sendMessage({
+                            to: channelIDArg,
+                            message: '',
+                            embed: searchPlayerEmbed,
+                            typing: true
+                        });
+                        */
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            } else {
+                var messageEmbed = new dsTemplates.baseDiscordEmbed;
+                messageEmbed.description = `**${playerName}** not found on Battle.net (Make sure you include the uniqueID)\nEX: playerName#1234`;
+                messageEmbed.title = 'Error:';
+                bot.sendMessage({
+                    to: channelIDArg,
+                    message: '',
+                    embed: messageEmbed,
+                    typing: true
+                });
+            }
+        })
+        .catch((err) => {
+            var messageEmbed = new dsTemplates.baseDiscordEmbed;
+            messageEmbed.description = 'I seem to be having an unknown problem. Try again later.';
+            messageEmbed.title = 'Error:';
+            bot.sendMessage({
+                to: channelIDArg,
+                message: '',
+                embed: messageEmbed,
+                typing: true
+            });
+            console.log(err);
+        });
+}
+
+
 // #endregion
 
 // #region D2APIFunctions
@@ -447,7 +545,6 @@ function getMileStones() {
             console.log(err);
         });
 }
-
 
 /**
  * Create an instanced DB of the D2 Manifest to query
@@ -626,6 +723,123 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
 
     return promiseTail;
 }
+
+
+
+function getMostRecentPlayedCharDataPCAlt(destinyMembershipID) {
+    var promiseTail = Promise.resolve();
+    promiseTail = promiseTail.then(() => {
+        return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
+            .then((profileData) => {
+                console.log(profileData);
+                console.log(profileData.Response.characterEquipment);
+                console.log(profileData.Response.itemComponents);
+                var mostRecentCharacterObj;
+                var returnArray = [[], []];
+                var characterDataArray = [];
+                var dateComparisonArray = [];
+                var WeaponArray = [];
+                var loadoutKinetic;
+                var loadOutEnergy;
+                var loadOutPower;
+                Object.keys(profileData.Response.characters.data).forEach(function (key) {
+                    console.log('\n' + key);
+                    console.log(profileData.Response.characters.data[key]);
+                    characterDataArray.push(profileData.Response.characters.data[key]);
+                    dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
+                });
+                //this is bad but it's all I have for now..
+                //compare the character's last played dates to get the most rcent character
+                var latestPlayedDate = getLatestDate(dateComparisonArray);
+                characterDataArray.forEach((entry, index) => {
+                    if (entry.dateLastPlayed == latestPlayedDate) {
+                        //return player character data here!
+                        //get loadout
+                        Object.keys(profileData.Response.characterEquipment.data).forEach(function (key) {
+                            console.log('\n' + key);
+                            //we now have the proper character loadout
+                            if (key == entry.characterId) {
+                                console.log(profileData.Response.characterEquipment.data[key].items);
+                                profileData.Response.characterEquipment.data[key].items.forEach((item, itemIndex) => {
+                                    console.log(item);
+                                    //get the item type
+                                    return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.itemHash}%'  ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                                        .then((queryData) => {
+                                            console.log('DB pinged')
+                                            if (!queryData) {
+                                                console.log('\nNo data was returned')
+                                            } else if (!queryData[0]) {
+                                                console.log('\nNo data was returned')
+                                            } else {
+                                                let itemData = JSON.parse(queryData[0].json);
+                                                //console.log(JSON.parse(queryData[0].json));
+                                                //console.log(itemData.defaultDamageType);
+                                                if (itemData.defaultDamageType == Enums.DamageType.None) {
+                                                    //aromor!
+                                                    //get weapon names, starting with Kinetic
+                                                } else if (itemData.defaultDamageType == Enums.DamageType.Kinetic) {
+                                                    //
+                                                    loadoutKinetic = itemData.displayProperties.name
+                                                    console.log(loadoutKinetic);
+                                                    return returnArray[1].push({ kinetic: loadoutKinetic })
+                                                } else {
+                                                    //energy/ power weapon
+                                                    //feed in the itemSlot type
+                                                    if (enumHelper.getWeaponType(itemData.itemCategoryHashes[0]) == 'Energy Weapon') {
+                                                        loadOutEnergy = itemData.displayProperties.name;
+                                                        console.log(loadOutEnergy)
+                                                        //WeaponArray.push({ loadOutEnergy });
+
+                                                    }
+                                                    if (enumHelper.getWeaponType(itemData.itemCategoryHashes[0]) == 'Power Weapon') {
+                                                        loadOutPower = itemData.displayProperties.name;
+                                                        console.log(loadOutPower)
+                                                        //WeaponArray.push({ loadOutPower });
+
+                                                    }
+                                                    //console.log(itemData);
+
+                                                }
+                                            }
+
+                                        })
+                                })
+                                /*
+                                traveler.getItem('4', destinyMembershipID.toString(), profileData.Response.characterEquipment.data[key].items[0].itemInstanceId, { components: [300, 307, 303, 304] })
+                                    .then((data) => {
+                                        console.log('\n\n\n\n\n')
+                                        console.log(data.Response.stats.data)
+                                    })
+                                    */
+                            } else {
+                                return;
+                            }
+                            //console.log(profileData.Response.characterEquipment.data[key].items);
+
+                        });
+                        console.log('\nGot most recent character...');
+                        mostRecentCharacterObj = entry;
+                    } else {
+                        return;
+                    }
+                });
+                //return a 2D array
+                returnArray[0].push(mostRecentCharacterObj)
+                console.log(WeaponArray)
+                returnArray[1].forEach((weaponItem, weaponsIndex) => {
+                    console.log('aaaaaaaaa')
+                })
+                return returnArray;
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+
+    })
+
+    return promiseTail;
+}
+
 // #endregion
 
 
