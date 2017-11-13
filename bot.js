@@ -7,6 +7,7 @@ const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to
 var Discord = require('discord.io');                                // Discord API wrapper
 var request = require('request');                                   // Used to make call to WF worldState
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
+var chalk = require('chalk');                                     // Console.logging colors!
 //traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
@@ -306,15 +307,17 @@ function getProfile(channelIDArg, playerName) {
                 return getMostRecentPlayedCharDataPC(playerID)                                   // Get the extra stuff like their icon
                     .then((playerCharData) => {
                         //set up data and use enums to get coded data (Gender/Etc.)
-                        var emblemURL = destiny2BaseURL + playerCharData.emblemPath;
-                        var lightLevel = playerCharData.light;
-                        let playerLevel = playerCharData.baseCharacterLevel;
-                        let playerGender = enumHelper.getDestinyGenderString(playerCharData.genderType);
-                        let playerClass = enumHelper.getDestinyClassString(playerCharData.classType);
-                        let playerRace = enumHelper.getDestinyRaceString(playerCharData.raceType)
-                        let timePlayed = convertMinsToHrsMins(playerCharData.minutesPlayedTotal);
-                        let lastPlayedDate = new Date(playerCharData.dateLastPlayed);
-                        let lastOnline = timeDifference(Date.now(), lastPlayedDate)
+                        var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
+                        var lightLevel = playerCharData[0].light;
+                        let playerLevel = playerCharData[0].baseCharacterLevel;
+                        let playerGender = enumHelper.getDestinyGenderString(playerCharData[0].genderType);
+                        let playerClass = enumHelper.getDestinyClassString(playerCharData[0].classType);
+                        let playerRace = enumHelper.getDestinyRaceString(playerCharData[0].raceType);
+                        let timePlayed = convertMinsToHrsMins(playerCharData[0].minutesPlayedTotal);
+                        let lastPlayedDate = new Date(playerCharData[0].dateLastPlayed);
+                        let lastOnline = timeDifference(Date.now(), lastPlayedDate);
+                        let playerKineticWeapon = playerCharData[1]
+                        console.log(playerKineticWeapon);
                         var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
                         searchPlayerEmbed.author = {
                             name: playerData.Response[0].displayName,
@@ -335,7 +338,7 @@ function getProfile(channelIDArg, playerName) {
                             },
                             {
                                 name: 'Weapons',
-                                value: '**Kinetic:** PH\n**Energy:** PH\n**Power:** PH',
+                                value: `**Kinetic:** ${playerKineticWeapon}\n**Energy:** PH\n**Power:** PH`,
                                 inline: true
                             },
                             {
@@ -493,6 +496,7 @@ function getPlayerProfile(destinyMembershipID) {
         });
 }
 
+//this function is too long
 function getMostRecentPlayedCharDataPC(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((profileData) => {
@@ -502,7 +506,10 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
             var mostRecentCharacterObj;
             var characterDataArray = [];
             var dateComparisonArray = [];
+            var WeaponArray = [];
             var loadoutKinetic;
+            var loadOutEnergy;
+            var loadOutPower;
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
                 console.log('\n' + key);
                 console.log(profileData.Response.characters.data[key]);
@@ -523,15 +530,42 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
                             profileData.Response.characterEquipment.data[key].items.forEach((item, itemIndex) => {
                                 console.log(item);
                                 //get the item type
-                                queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryBucketDefinition WHERE id LIKE '%${item.bucketHash}%'  ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                                queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.itemHash}%'  ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
                                     .then((queryData) => {
                                         if (!queryData) {
                                             console.log('\nNo data was returned')
-                                        } else if(!queryData[0]) {
+                                        } else if (!queryData[0]) {
                                             console.log('\nNo data was returned')
                                         } else {
-                                            console.log(JSON.parse(queryData[0].json));
+                                            let itemData = JSON.parse(queryData[0].json);
+                                            //console.log(JSON.parse(queryData[0].json));
+                                            console.log(itemData.defaultDamageType);
+                                            if (itemData.defaultDamageType == Enums.DamageType.None) {
+                                                //aromor!
+                                                //get weapon names, starting with Kinetic
+                                            } else if (itemData.defaultDamageType == Enums.DamageType.Kinetic) {
+                                                //
+                                                loadoutKinetic = itemData.displayProperties.name
+                                                console.log(loadoutKinetic);
+                                                WeaponArray.push({ kinetic: loadoutKinetic });
+                                            } else {
+                                                //energy/ power weapon
+                                                //feed in the itemSlot type
+                                                if (enumHelper.getWeaponType(itemData.itemCategoryHashes[0]) == 'Energy Weapon') {
+                                                    loadOutEnergy = itemData.displayProperties.name;
+                                                    console.log(loadOutEnergy)
+                                                    WeaponArray.push({ energy: loadOutEnergy });
 
+                                                }
+                                                if (enumHelper.getWeaponType(itemData.itemCategoryHashes[0]) == 'Power Weapon') {
+                                                    loadOutPower = itemData.displayProperties.name;
+                                                    console.log(loadOutPower)
+                                                    WeaponArray.push({ power: loadOutPower });
+
+                                                }
+                                                //console.log(itemData);
+
+                                            }
                                         }
 
                                     })
@@ -549,7 +583,11 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
                     mostRecentCharacterObj = entry;
                 }
             });
-            return mostRecentCharacterObj;
+            //return a 2D array
+            var returnArray = [[], []];
+            returnArray[0].push(mostRecentCharacterObj)
+            returnArray[1].push(WeaponArray)
+            return returnArray;
         })
         .catch((err) => {
             console.log(err);
