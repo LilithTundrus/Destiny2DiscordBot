@@ -2,7 +2,7 @@
 //custom requires/libs
 const config = require('./config.js');                              // Conifg/auth data
 const dsTemplates = require('./dsTemplates.js');                    // Templates for Discord messages
-const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums
+const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums (common ones anyway)
 //npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
 var request = require('request');                                   // Used to make call to WF worldState
@@ -11,8 +11,6 @@ var Traveler = require('the-traveler').default;                     // Destiny 2
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
 var profilesType = Enums.ComponentType.Profiles;                    // Access the-traveler enums
-//get character stat enums here
-
 //Built-in requires
 var fs = require('fs');
 var os = require('os');                                             // OS info lib built into node for debugging
@@ -26,17 +24,18 @@ const traveler = new Traveler({                                     // Must be d
 var destinyManifest;
 createNewManifest()
     .then((newDestinyManifest) => {
-        return destinyManifest = newDestinyManifest;
+        return destinyManifest = newDestinyManifest;                // Somewhat janky. Will do for now
     })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.009';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0010';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
 - Current design goal is PC ONLY
 - Do everything that doesn't involve the DB first!
 - Region comments should work in atom/VSCode
+- For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!!! asjdfhljkfl
 
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: create config-template
@@ -47,6 +46,7 @@ TODO: fully extend enumHelper
 TODO: move miscFunctions to /lib
 TODO: parse more data from the extra component endpoints in enum ComponentType
 TODO: fully abstracts now-working DB
+TODO: rework logic on getting a player's profile. Split it up into smaller chunks
 */
 
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
@@ -303,7 +303,7 @@ function getProfile(channelIDArg, playerName) {
         .then((playerData) => {
             if (playerData.Response[0]) {
                 var playerID = playerData.Response[0].membershipId.toString();
-                return getMostRecentPlayedCharPC(playerID)                                   // Get the extra stuff like their icon
+                return getMostRecentPlayedCharDataPC(playerID)                                   // Get the extra stuff like their icon
                     .then((playerCharData) => {
                         //set up data and use enums to get coded data (Gender/Etc.)
                         var emblemURL = destiny2BaseURL + playerCharData.emblemPath;
@@ -430,7 +430,11 @@ function getMileStones() {
 }
 
 
-//create a Manifest instance to query for D2 data within the DB (super janky)
+/**
+ * Create an instanced DB of the D2 Manifest to query
+ * 
+ * @returns {Promise}
+ */
 function createNewManifest() {
     var promiseTail = Promise.resolve();
     promiseTail = promiseTail
@@ -449,12 +453,18 @@ function createNewManifest() {
     return promiseTail;
 }
 
-//Not yet working/used
+/**
+ * Send a query to the D2 Manifest (SQLite syntax)
+ * 
+ * @param {string} query 
+ * @returns {JSON | null}
+ */
 function queryDestinyManifest(query) {
     return destinyManifest.queryManifest(query).then(queryResult => {
         return queryResult;
     }).catch(err => {
         console.log(err);
+        return err;
     });
 }
 
@@ -483,14 +493,16 @@ function getPlayerProfile(destinyMembershipID) {
         });
 }
 
-function getMostRecentPlayedCharPC(destinyMembershipID) {
+function getMostRecentPlayedCharDataPC(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((profileData) => {
             console.log(profileData);
             console.log(profileData.Response.characterEquipment);
+            console.log(profileData.Response.itemComponents);
             var mostRecentCharacterObj;
             var characterDataArray = [];
             var dateComparisonArray = [];
+            var loadoutKinetic;
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
                 console.log('\n' + key);
                 console.log(profileData.Response.characters.data[key]);
@@ -508,12 +520,26 @@ function getMostRecentPlayedCharPC(destinyMembershipID) {
                         //we now have the proper character loadout
                         if (key == entry.characterId) {
                             console.log(profileData.Response.characterEquipment.data[key].items);
+                            profileData.Response.characterEquipment.data[key].items.forEach((item, itemIndex) => {
+                                console.log(item);
+                                //get the item type
+                                queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryBucketDefinition WHERE id LIKE '%${item.bucketHash}%'  ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                                    .then((queryData) => {
+                                        if (!queryData) {
+                                            console.log('\nNo data was returned')
+                                        } else if(!queryData[0]) {
+                                            console.log('\nNo data was returned')
+                                        } else {
+                                            console.log(JSON.parse(queryData[0].json));
+
+                                        }
+
+                                    })
+                            })
                             traveler.getItem('4', destinyMembershipID.toString(), profileData.Response.characterEquipment.data[key].items[0].itemInstanceId, { components: [300, 307, 303, 304] })
                                 .then((data) => {
-                                    console.log(data)
+                                    console.log('\n\n\n\n\n')
                                     console.log(data.Response.stats.data)
-                                    console.log(data.Response.instance.data)
-                                    console.log(data.Response.item.data)
                                 })
                         }
                         //console.log(profileData.Response.characterEquipment.data[key].items);
