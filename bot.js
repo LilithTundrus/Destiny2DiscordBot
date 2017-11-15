@@ -405,6 +405,7 @@ function getProfile(channelIDArg, playerName) {
 
 /**
  * Get a profile of the most recent character played by a battle.net accunt if it exists
+ * (abstracts a lot of related but separate API and DB calls)
  * 
  * @param {string|number} channelIDArg 
  * @param {string} playerName 
@@ -415,10 +416,10 @@ function getProfileAlt(channelIDArg, playerName) {
         .then((playerData) => {
             if (playerData.Response[0]) {
                 var playerID = playerData.Response[0].membershipId.toString();
-                return getMostRecentPlayedCharDataPCAlt(playerID)                                   // Get the extra stuff like their icon
-                    .then((playerCharData) => {
+                return getMostRecentPlayedCharID(playerID)                                   // Get the extra stuff like their icon
+                    .then((characterID) => {
                         console.log('PC Recent player call finished..');
-                        console.log(playerCharData)
+                        console.log(characterID);
 
                         //get characterEquipmentData
 
@@ -735,11 +736,11 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
  * @param {number | string} destinyMembershipID 
  * @returns {JSON}
  */
-function getMostRecentPlayedCharDataPCAlt(destinyMembershipID) {
+function getMostRecentPlayedCharID(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((profileData) => {
             //set up variables to push/assign
-            var mostRecentCharacterObj = {};
+            var mostRecentCharacterID = 0;
             var characterDataArray = [];
             var dateComparisonArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
@@ -748,23 +749,23 @@ function getMostRecentPlayedCharDataPCAlt(destinyMembershipID) {
                 characterDataArray.push(profileData.Response.characters.data[key]);
                 dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
             });
-            //this is bad but it's all I have for now..
             //compare the character's last played dates to get the most rcent character
             var latestPlayedDate = getLatestDate(dateComparisonArray);
             characterDataArray.forEach((entry, index) => {
                 if (entry.dateLastPlayed == latestPlayedDate) {
                     // Assign the character data to the entry that contains the most recently played date
-                    mostRecentCharacterObj = entry;
+                    mostRecentCharacterID = entry.characterId;
                 } else {
                     return;                                         // Do nothing
                 }
             });
-            return mostRecentCharacterObj;                          // Return the correct object
+            return mostRecentCharacterID;                          // Return the correct object
         })
         .catch((err) => {
             console.log(err);
         });
 }
+
 
 // #endregion
 
