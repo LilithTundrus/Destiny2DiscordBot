@@ -5,9 +5,8 @@ const dsTemplates = require('./dsTemplates.js');                    // Templates
 const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums (common ones anyway)
 //npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
-var request = require('request');                                   // Used to make call to WF worldState
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
-var chalk = require('chalk');                                     // Console.logging colors!
+var chalk = require('chalk');                                       // Console.logging colors!
 //traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
@@ -41,16 +40,14 @@ Notes:
 TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: create config-template
 TODO: clean up currently working components and outline what they do
-TODO: fix declare organizations
 TODO: figure out proper way to do Oauth (look at spirit's code)
 TODO: fully extend enumHelper
 TODO: move miscFunctions to /lib
 TODO: parse more data from the extra component endpoints in enum ComponentType
-TODO: fully abstracts now-working DB
-TODO: rework logic on getting a player's profile. Split it up into smaller chunks
+TODO: fully abstract now-working DB
 TODO: fix eveything
+TODO: set up bot DB for player/clan rosters
 */
-
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
     autorun: true
