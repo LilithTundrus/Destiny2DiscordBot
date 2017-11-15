@@ -28,7 +28,7 @@ createNewManifest()
     })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0011';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0012';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -548,7 +548,7 @@ function getPlayerProfile(destinyMembershipID) {
  * @returns {number}
  */
 function getMostRecentPlayedCharID(destinyMembershipID) {
-    return traveler.getProfile('4', destinyMembershipID, { components: [100] })
+    return traveler.getProfile('4', destinyMembershipID, { components: [100, 200] })
         .then((profileData) => {
             //set up variables to push/assign
             var mostRecentCharacterID = 0;
