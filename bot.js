@@ -301,7 +301,7 @@ function searchplayer(channelIDArg, playerName) {
  * 
  * TODO: get light level of each item based on their instance hash
  * 
- * TODO: get the damage type of weapons
+ * TODO: get the damage type of weapons (less jankily)
  * 
  * @param {string|number} channelIDArg 
  * @param {string} playerName 
@@ -442,15 +442,62 @@ function getProfile(channelIDArg, playerName) {
 }
 
 function nightfalls(channelIDArg) {
-    var nightfallEmbed = new dsTemplates.baseDiscordEmbed;
-    nightfallEmbed.title = `This weeks NightFall Strike:`;
-    nightfallEmbed.description = 'AAAAAAAAAAAAAAAA';
-    bot.sendMessage({
-        to: channelIDArg,
-        message: '',
-        embed: nightfallEmbed,
-        typing: true
-    });
+    return getMilestonByHash('2171429505')
+        .then((nightfallData) => {
+            var nightfallEmbedTitle;
+            var nightfallEmbedDescription;
+            console.log(nightfallData.availableQuests[0]);
+            return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyActivityDefinition WHERE json LIKE '%${nightfallData.availableQuests[0].activity.activityHash}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                .then((queryData) => {
+                    //this query contains the nightfall description and name
+                    //console.log(queryData);
+                    let nightfallData = JSON.parse(queryData[0].json);
+                    console.log(nightfallData);
+                    nightfallEmbedTitle = nightfallData.displayProperties.name;
+                    nightfallEmbedDescription = nightfallData.displayProperties.description;
+
+                })
+                .then(() => {
+                    //create date Objects to handle moving the true timestamps to human readable
+                    let startDate = new Date(nightfallData.startDate).toDateString();
+                    let endDate = new Date(nightfallData.endDate).toDateString();
+                    var nightfallEmbed = new dsTemplates.baseDiscordEmbed;
+                    nightfallEmbed.title = nightfallEmbedTitle;
+                    nightfallEmbed.description = nightfallEmbedDescription;
+                    nightfallEmbed.fields = [
+                        {
+                            name: 'Start Date:',
+                            value: `Starts: ${startDate}`,
+                            inline: true
+                        },
+                        {
+                            name: 'End Date:',
+                            value: `Ends: ${endDate}`,
+                            inline: true
+                        },
+                        {
+                            name: 'Modifiers:',
+                            value: `PH`,
+                            inline: false
+                        },
+                        {
+                            name: 'Challenges:',
+                            value: `PH`,
+                            inline: false
+                        },
+                    ]
+                    return bot.sendMessage({
+                        to: channelIDArg,
+                        message: '',
+                        embed: nightfallEmbed,
+                        typing: true
+                    });
+                    console.log('Done.');
+                })
+
+
+        })
+
 }
 // #endregion
 
@@ -616,11 +663,11 @@ function getCharacterDataPC(destinyMembershipID, characterID) {
         })
 }
 
-function getNightfallData() {
+function getMilestonByHash(hashArg) {
     return traveler.getPublicMilestones()
         .then((mileStoneData) => {
-            //get the nightfall data by hard-coded hash
-            return mileStoneData.Response['2171429505'];
+            //get the passed milestone hash
+            return mileStoneData.Response[hashArg];
         })
         .catch((err) => {
             console.log(err);
