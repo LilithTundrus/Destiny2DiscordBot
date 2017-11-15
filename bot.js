@@ -420,68 +420,29 @@ function getProfileAlt(channelIDArg, playerName) {
                     .then((characterID) => {
                         console.log('PC Recent player call finished..');
                         console.log(characterID);
-
                         //get character data with the ID
                         return getCharacterDataPC(playerID, characterID)
                             .then((characterData) => {
+                                var promiseTail = Promise.resolve();
                                 console.log('Got character data by ID');
                                 console.log(characterData);
                                 //characterData.data contain things like light level/etc.
                                 console.log(characterData.equipment.data);
-
+                                //resolve equipment by hash 
+                                characterData.equipment.data.items.forEach((item, index) => {
+                                    //console.log(item)
+                                    promiseTail = promiseTail.then(() => {
+                                        return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.itemHash}%'  ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                                            .then((queryData) => {
+                                                console.log(queryData)
+                                            })
+                                    })
+                                })
+                                return promiseTail;
                             })
-                        /*
-                        //set up data and use enums to get coded data (Gender/Etc.)
-                        var emblemURL = destiny2BaseURL + playerCharData[0][0].emblemPath;
-                        var lightLevel = playerCharData[0][0].light;
-                        let playerLevel = playerCharData[0][0].baseCharacterLevel;
-                        let playerGender = enumHelper.getDestinyGenderString(playerCharData[0][0].genderType);
-                        let playerClass = enumHelper.getDestinyClassString(playerCharData[0][0].classType);
-                        let playerRace = enumHelper.getDestinyRaceString(playerCharData[0][0].raceType);
-                        let timePlayed = convertMinsToHrsMins(playerCharData[0][0].minutesPlayedTotal);
-                        let lastPlayedDate = new Date(playerCharData[0][0].dateLastPlayed);
-                        let lastOnline = timeDifference(Date.now(), lastPlayedDate);
-                        let playerKineticWeapon = playerCharData[1]
-                        console.log(playerKineticWeapon);
-                        var searchPlayerEmbed = new dsTemplates.baseDiscordEmbed;
-                        searchPlayerEmbed.author = {
-                            name: playerData.Response[0].displayName,
-                            icon_url: 'http://i.imgur.com/tZvXxcu.png'
-                        }
-                        searchPlayerEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
-                        searchPlayerEmbed.description = `Level ${playerLevel} ${playerRace} ${playerGender} ${playerClass} | :diamond_shape_with_a_dot_inside: ${lightLevel} Light`;
-                        searchPlayerEmbed.fields = [
-                            {
-                                name: 'Time played on character',
-                                value: timePlayed,
-                                inline: true
-                            },
-                            {
-                                name: 'Last online',
-                                value: lastOnline,
-                                inline: true
-                            },
-                            {
-                                name: 'Weapons',
-                                value: `**Kinetic:** ${playerKineticWeapon}\n**Energy:** PH\n**Power:** PH`,
-                                inline: true
-                            },
-                            {
-                                name: 'Armor',
-                                value: '**Head:** PH\n**Arms:** PH\n**Chest:** PH\n**Legs:** PH\n**Class Item:** PH',
-                                inline: true
-                            },
-                        ];
-                        searchPlayerEmbed.thumbnail = {
-                            url: emblemURL
-                        };
-                        bot.sendMessage({
-                            to: channelIDArg,
-                            message: '',
-                            embed: searchPlayerEmbed,
-                            typing: true
-                        });
-                        */
+                            .then(() => {
+                                console.log('Done.')
+                            })
                     })
                     .catch((err) => {
                         console.log(err);
@@ -589,12 +550,13 @@ function createNewManifest() {
  * @returns {JSON | null}
  */
 function queryDestinyManifest(query) {
-    return destinyManifest.queryManifest(query).then(queryResult => {
-        return queryResult;
-    }).catch(err => {
-        console.log(err);
-        return err;
-    });
+    return destinyManifest.queryManifest(query)
+        .then(queryResult => {
+            return queryResult;
+        }).catch(err => {
+            console.log(err);
+            return err;
+        });
 }
 
 function getClanWeeklyRewardStateData() {
