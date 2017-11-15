@@ -29,7 +29,7 @@ createNewManifest()
     })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0010';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0011';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -407,6 +407,9 @@ function getProfile(channelIDArg, playerName) {
  * Get a profile of the most recent character played by a battle.net accunt if it exists
  * (abstracts a lot of related but separate API and DB calls)
  * 
+ * TODO: get this to actually re-call the DB and get the correct weapons type per slot
+ * rather than just *hoping* the order stays the same or doesn't break
+ * 
  * @param {string|number} channelIDArg 
  * @param {string} playerName 
  * @returns {Promise}
@@ -414,8 +417,20 @@ function getProfile(channelIDArg, playerName) {
 function getProfileAlt(channelIDArg, playerName) {
     return searchForDestinyPlayerPC(playerName)                     // find the player's ID (by name)
         .then((playerData) => {
+            //set up vars to assign with data later
+            var playerEquipMentArray = [];
+            var playerID;
+            var playerEmblemURL;
+            var playerLightLevel;
+            var playerLevel;
+            var playerGender;
+            var playerRace;
+            var playerClass;
+            var playerTimePlayed;
+            var playerLastPlayedDate;
+            var playerLastOnline;
             if (playerData.Response[0]) {
-                var playerID = playerData.Response[0].membershipId.toString();
+                playerID = playerData.Response[0].membershipId.toString();
                 return getMostRecentPlayedCharID(playerID)                                   // Get the extra stuff like their icon
                     .then((characterID) => {
                         console.log('PC Recent player call finished..');
@@ -423,24 +438,79 @@ function getProfileAlt(channelIDArg, playerName) {
                         //get character data with the ID
                         return getCharacterDataPC(playerID, characterID)
                             .then((characterData) => {
+
                                 var promiseTail = Promise.resolve();
                                 console.log('Got character data by ID');
                                 console.log(characterData);
-                                //characterData.data contain things like light level/etc.
+                                //characterData.data contains things like light level/etc.
+                                playerEmblemURL = destiny2BaseURL + characterData.character.data.emblemPath;
+                                playerLightLevel = characterData.character.data.light;
+                                playerLevel = characterData.character.data.baseCharacterLevel;
+                                playerGender = enumHelper.getDestinyGenderString(characterData.character.data.genderType);
+                                playerRace = enumHelper.getDestinyRaceString(characterData.character.data.raceType);
+                                playerClass = enumHelper.getDestinyClassString(characterData.character.data.classType);
+                                playerTimePlayed = convertMinsToHrsMins(characterData.character.data.minutesPlayedTotal);
+                                let lastPlayedDate = new Date(characterData.character.data.dateLastPlayed);
+                                playerLastOnline = timeDifference(Date.now(), lastPlayedDate);
+
                                 console.log(characterData.equipment.data);
                                 //resolve equipment by hash 
                                 characterData.equipment.data.items.forEach((item, index) => {
-                                    //console.log(item)
                                     promiseTail = promiseTail.then(() => {
+                                        //chain the queries together
                                         return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.itemHash}%'  ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
                                             .then((queryData) => {
-                                                console.log(queryData)
+                                                //searching by hash should only return one value
+                                                //TODO: sanity check this
+                                                let itemData = JSON.parse(queryData[0].json);
+                                                console.log(itemData.displayProperties.name)
+                                                playerEquipMentArray.push(itemData.displayProperties.name)
                                             })
                                     })
                                 })
                                 return promiseTail;
                             })
                             .then(() => {
+                                //piece together and send the message
+                                var playerProfileEmbed = new dsTemplates.baseDiscordEmbed;
+                                playerProfileEmbed.author = {
+                                    name: playerData.Response[0].displayName,
+                                    icon_url: 'http://i.imgur.com/tZvXxcu.png'
+                                }
+                                playerProfileEmbed.title = `Most recently played character for ${playerData.Response[0].displayName}`;
+                                playerProfileEmbed.description = `Level ${playerLevel} ${playerRace} ${playerGender} ${playerClass} | :diamond_shape_with_a_dot_inside: ${playerLightLevel} Light`;
+                                playerProfileEmbed.fields = [
+                                    {
+                                        name: 'Time played on character',
+                                        value: playerTimePlayed,
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Last online',
+                                        value: playerLastOnline,
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Weapons',
+                                        value: `**Kinetic:** ${playerEquipMentArray[0]}\n**Energy:** ${playerEquipMentArray[1]}\n**Power:** ${playerEquipMentArray[2]}`,
+                                        inline: true
+                                    },
+                                    {
+                                        name: 'Armor',
+                                        value: `**Head:** ${playerEquipMentArray[3]}\n**Arms:** ${playerEquipMentArray[4]}\n**Chest:** ${playerEquipMentArray[5]}\n**Legs:** ${playerEquipMentArray[6]}\n**Class Item:** ${playerEquipMentArray[7]}`,
+                                        inline: true
+                                    },
+                                ];
+                                playerProfileEmbed.thumbnail = {
+                                    url: playerEmblemURL
+                                };
+                                bot.sendMessage({
+                                    to: channelIDArg,
+                                    message: '',
+                                    embed: playerProfileEmbed,
+                                    typing: true
+                                });
+
                                 console.log('Done.')
                             })
                     })
