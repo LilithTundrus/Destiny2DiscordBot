@@ -738,15 +738,13 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
 function getMostRecentPlayedCharDataPCAlt(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((profileData) => {
-            //console.log(profileData);
-            //console.log(profileData.Response.characterEquipment);
-            //console.log(profileData.Response.itemComponents);
-            var mostRecentCharacterObj;
+            //set up variables to push/assign
+            var mostRecentCharacterObj = {};
             var characterDataArray = [];
             var dateComparisonArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
                 console.log('\n' + key);
-                //console.log(profileData.Response.characters.data[key]);
+                //push the data from the key of the obj since we can't directly reference it as they change
                 characterDataArray.push(profileData.Response.characters.data[key]);
                 dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
             });
@@ -755,12 +753,13 @@ function getMostRecentPlayedCharDataPCAlt(destinyMembershipID) {
             var latestPlayedDate = getLatestDate(dateComparisonArray);
             characterDataArray.forEach((entry, index) => {
                 if (entry.dateLastPlayed == latestPlayedDate) {
+                    // Assign the character data to the entry that contains the most recently played date
                     mostRecentCharacterObj = entry;
                 } else {
-                    return;
+                    return;                                         // Do nothing
                 }
             });
-            return mostRecentCharacterObj;
+            return mostRecentCharacterObj;                          // Return the correct object
         })
         .catch((err) => {
             console.log(err);
