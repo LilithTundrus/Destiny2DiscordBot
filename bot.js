@@ -147,7 +147,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     });
                 break;
             case 'nightfall':
-                getNightfallStats();
+                nightfalls(channelID);
                 break;
             // Just add any case commands here
         }
@@ -441,7 +441,17 @@ function getProfile(channelIDArg, playerName) {
         });
 }
 
-
+function nightfalls(channelIDArg) {
+    var nightfallEmbed = new dsTemplates.baseDiscordEmbed;
+    nightfallEmbed.title = `This weeks NightFall Strike:`;
+    nightfallEmbed.description = 'AAAAAAAAAAAAAAAA';
+    bot.sendMessage({
+        to: channelIDArg,
+        message: '',
+        embed: nightfallEmbed,
+        typing: true
+    });
+}
 // #endregion
 
 // #region D2APIFunctions
@@ -606,11 +616,14 @@ function getCharacterDataPC(destinyMembershipID, characterID) {
         })
 }
 
-function getNightfallStats() {
+function getNightfallData() {
     return traveler.getPublicMilestones()
         .then((mileStoneData) => {
             //get the nightfall data by hard-coded hash
-            console.log(mileStoneData.Response['2171429505'])
+            return mileStoneData.Response['2171429505'];
+        })
+        .catch((err) => {
+            console.log(err);
         })
 }
 
