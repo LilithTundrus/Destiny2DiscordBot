@@ -548,7 +548,7 @@ function getPlayerProfile(destinyMembershipID) {
  * @returns {number}
  */
 function getMostRecentPlayedCharID(destinyMembershipID) {
-    return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
+    return traveler.getProfile('4', destinyMembershipID, { components: [100] })
         .then((profileData) => {
             //set up variables to push/assign
             var mostRecentCharacterID = 0;
@@ -610,6 +610,11 @@ function formatTime(seconds) {
     return pad(hours) + ':' + pad(minutes) + ':' + pad(seconds);
 }
 
+/**
+ * Takes in an array of date and returns the most recent value of the passed dates
+ * @param {Array} data 
+ * @returns {string}
+ */
 function getLatestDate(data) {
     var sorted = data.map(function (item) {
         var MeasureDate = item.MeasureDate;
@@ -628,8 +633,7 @@ function getLatestDate(data) {
 }
 
 /**
- * 
- * 
+ * Function takes in a minutes value and returns a string of X hours, X minutes
  * @param {number} mins 
  * @returns {string}
  */
@@ -642,7 +646,6 @@ function convertMinsToHrsMins(mins) {
 }
 
 /**
- * 
  * Takes two dates to compare and return an X timeValue ago string (IE 3 months ago)
  * @param {Date} current 
  * @param {Date} previous 
