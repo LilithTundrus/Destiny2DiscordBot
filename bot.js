@@ -421,8 +421,15 @@ function getProfileAlt(channelIDArg, playerName) {
                         console.log('PC Recent player call finished..');
                         console.log(characterID);
 
-                        //get characterEquipmentData
+                        //get character data with the ID
+                        return getCharacterDataPC(playerID, characterID)
+                            .then((characterData) => {
+                                console.log('Got character data by ID');
+                                console.log(characterData);
+                                //characterData.data contain things like light level/etc.
+                                console.log(characterData.equipment.data);
 
+                            })
                         /*
                         //set up data and use enums to get coded data (Gender/Etc.)
                         var emblemURL = destiny2BaseURL + playerCharData[0][0].emblemPath;
@@ -731,10 +738,12 @@ function getMostRecentPlayedCharDataPC(destinyMembershipID) {
 }
 
 /**
+ * TODO: make this more efficient 
+ * 
  * Abstract sorting through player data and determining the most recently played character
  * 
  * @param {number | string} destinyMembershipID 
- * @returns {JSON}
+ * @returns {number}
  */
 function getMostRecentPlayedCharID(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201, 202, 203, 204, 205, 303] })
@@ -745,7 +754,7 @@ function getMostRecentPlayedCharID(destinyMembershipID) {
             var dateComparisonArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
                 console.log('\n' + key);
-                //push the data from the key of the obj since we can't directly reference it as they change
+                //push the data from the key of the obj since we can directly reference it since they change
                 characterDataArray.push(profileData.Response.characters.data[key]);
                 dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
             });
@@ -764,6 +773,22 @@ function getMostRecentPlayedCharID(destinyMembershipID) {
         .catch((err) => {
             console.log(err);
         });
+}
+
+/**
+ * get D2 Character data in an aggregated source
+ * 
+ * Update the components arg to the traveler to get more/less information
+ * 
+ * @param {any} destinyMembershipID 
+ * @param {any} characterID 
+ * @returns {Promise & JSON}
+ */
+function getCharacterDataPC(destinyMembershipID, characterID) {
+    return traveler.getCharacter('4', destinyMembershipID, characterID, { components: [200, 201, 202, 203, 204, 205, 303] })
+        .then((response) => {
+            return response.Response;                                   //return the important data from the API call
+        })
 }
 
 
