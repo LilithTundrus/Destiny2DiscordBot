@@ -28,7 +28,7 @@ createNewManifest()
     })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0012';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0013';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -146,7 +146,9 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     });
                 break;
-
+            case 'nightfall':
+                getNightfallStats();
+                break;
             // Just add any case commands here
         }
     }
@@ -297,6 +299,10 @@ function searchplayer(channelIDArg, playerName) {
  * TODO: get this to actually re-call the DB and get the correct weapons type per slot
  * rather than just *hoping* the order stays the same or doesn't break
  * 
+ * TODO: get light level of each item based on their instance hash
+ * 
+ * TODO: get the damage type of weapons
+ * 
  * @param {string|number} channelIDArg 
  * @param {string} playerName 
  * @returns {Promise}
@@ -306,6 +312,7 @@ function getProfile(channelIDArg, playerName) {
         .then((playerData) => {
             //set up vars to assign with data later
             var playerEquipMentArray = [];
+            var playerWeaponEnergyTypes = [];
             var playerID;
             var playerEmblemURL;
             var playerLightLevel;
@@ -348,8 +355,14 @@ function getProfile(channelIDArg, playerName) {
                                                 //searching by hash should only return one value
                                                 //TODO: sanity check this
                                                 let itemData = JSON.parse(queryData[0].json);
-                                                console.log(itemData.displayProperties.name)
-                                                playerEquipMentArray.push(itemData.displayProperties.name)
+                                                console.log(itemData.displayProperties.name);
+                                                console.log(itemData.defaultDamageType);
+                                                playerEquipMentArray.push(itemData.displayProperties.name);
+                                                //if NOT armor or Kinetic
+                                                if (itemData.defaultDamageType !== 0 && itemData.defaultDamageType !== 1) {
+                                                    let damageType = enumHelper.getWeaponDamageType(itemData.defaultDamageType);
+                                                    playerWeaponEnergyTypes.push(damageType);
+                                                }
                                             })
                                     })
                                 })
@@ -377,7 +390,7 @@ function getProfile(channelIDArg, playerName) {
                                     },
                                     {
                                         name: 'Weapons',
-                                        value: `**Kinetic:** ${playerEquipMentArray[0]}\n**Energy:** ${playerEquipMentArray[1]}\n**Power:** ${playerEquipMentArray[2]}`,
+                                        value: `**Kinetic:** ${playerEquipMentArray[0]}\n**Energy:** ${playerEquipMentArray[1]} (${playerWeaponEnergyTypes[0]})\n**Power:** ${playerEquipMentArray[2]} (${playerWeaponEnergyTypes[1]})`,
                                         inline: true
                                     },
                                     {
@@ -590,6 +603,14 @@ function getCharacterDataPC(destinyMembershipID, characterID) {
     return traveler.getCharacter('4', destinyMembershipID, characterID, { components: [200, 201, 202, 203, 204, 205, 303] })
         .then((response) => {
             return response.Response;                                   //return the important data from the API call
+        })
+}
+
+function getNightfallStats() {
+    return traveler.getPublicMilestones()
+        .then((mileStoneData) => {
+            //get the nightfall data by hard-coded hash
+            console.log(mileStoneData.Response['2171429505'])
         })
 }
 
