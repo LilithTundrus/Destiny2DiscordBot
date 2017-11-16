@@ -1,3 +1,7 @@
 **%about**
 
 Display information about the bot
+
+**%nightfall**
+
+Get the weekly Nightfall info
