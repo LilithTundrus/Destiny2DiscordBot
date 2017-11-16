@@ -8,4 +8,6 @@ Display information about the bot
 
 Get the weekly Nightfall info
 
-**%profile <BattleTag#1234>
+**%profile <BattleTag#1234>**
+
+Get a destiny player's stats (PC only for now) by BattleTag (required)
