@@ -28,7 +28,7 @@ createNewManifest()
     })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0013';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0020';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -47,6 +47,8 @@ TODO: parse more data from the extra component endpoints in enum ComponentType
 TODO: fully abstract now-working DB
 TODO: fix eveything
 TODO: set up bot DB for player/clan rosters
+TODO: find a way to keep the manifest fresh
+TODO: create a hash decoder function for the DB (promise based)
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -446,24 +448,76 @@ function nightfalls(channelIDArg) {
         .then((nightfallData) => {
             var nightfallEmbedTitle;
             var nightfallEmbedDescription;
-            console.log(nightfallData.availableQuests[0]);
+            var nightfallEmbedIcon;
+            var nightfallModifiersDecoded = [];
+            var nightfallChallengesEncoded = [];
+            var nightfallChallengesDecoded = [];
+            //get the base data
             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyActivityDefinition WHERE json LIKE '%${nightfallData.availableQuests[0].activity.activityHash}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
                 .then((queryData) => {
                     //this query contains the nightfall description and name
-                    //console.log(queryData);
-                    let nightfallData = JSON.parse(queryData[0].json);
-                    console.log(nightfallData);
-                    nightfallEmbedTitle = nightfallData.displayProperties.name;
-                    nightfallEmbedDescription = nightfallData.displayProperties.description;
+                    let nightfallQueryData = JSON.parse(queryData[0].json);
+                    console.log(nightfallQueryData);
+                    nightfallEmbedTitle = nightfallQueryData.displayProperties.name;
+                    nightfallEmbedDescription = nightfallQueryData.displayProperties.description;
+                    nightfallEmbedIcon = destiny2BaseURL + nightfallQueryData.displayProperties.icon;
+                    //get the challenge hashes from the DB
+                    nightfallQueryData.challenges.forEach((challenge, index) => {
+                        nightfallChallengesEncoded.push(challenge.objectiveHash);
+                    })
+                    console.log(nightfallChallengesEncoded);
+                    //decode the challenges
+                    var promiseTail = Promise.resolve();
+                    nightfallChallengesEncoded.forEach((challengeHash, index) => {
+                        promiseTail = promiseTail.then(() => {
+                            return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyObjectiveDefinition WHERE json LIKE '%${challengeHash}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                                .then((queryData) => {
+                                    console.log(queryData);
+                                    let challengeJSON = JSON.parse(queryData[0].json);
+                                    var challenges = {};
+                                    challenges.name = challengeJSON.displayProperties.name;
+                                    challenges.description = challengeJSON.displayProperties.description;
+                                    nightfallChallengesDecoded.push(challenges);
+                                })
 
+                            console.log(nightfallData.availableQuests[0].activity.modifierHashes)
+                            //Decode the modifiers (their hashes are right in the nightfall milestone)
+
+                        })
+                    })
+                    nightfallData.availableQuests[0].activity.modifierHashes.forEach((entry, index) => {
+                        promiseTail = promiseTail.then(() => {
+                            return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyActivityModifierDefinition WHERE json LIKE '%${entry}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+                                .then((queryData) => {
+                                    //console.log(queryData);
+                                    let modifierJSON = JSON.parse(queryData[0].json);
+                                    console.log(modifierJSON)
+                                    var modifier = {};
+                                    modifier.name = modifierJSON.displayProperties.name;
+                                    modifier.description = modifierJSON.displayProperties.description
+                                    nightfallModifiersDecoded.push(modifier);
+                                })
+                        })
+
+                    })
+                    return promiseTail;
                 })
                 .then(() => {
                     //create date Objects to handle moving the true timestamps to human readable
                     let startDate = new Date(nightfallData.startDate).toDateString();
                     let endDate = new Date(nightfallData.endDate).toDateString();
+                    //format the challenges to fit into a field value
+                    let challenges = nightfallChallengesDecoded.map(function (elem) {
+                        return '\n\n**' + elem.name + ':** \n' + elem.description;
+                    }).join('  ')
+                    console.log(challenges);
+                    let modifiers = nightfallModifiersDecoded.map(function (elem) {
+                        return '\n\n**' + elem.name + ':** \n' + elem.description;
+                    }).join('  ')
+
                     var nightfallEmbed = new dsTemplates.baseDiscordEmbed;
                     nightfallEmbed.title = nightfallEmbedTitle;
-                    nightfallEmbed.description = nightfallEmbedDescription;
+                    nightfallEmbed.description = `_${nightfallEmbedDescription}_`;
                     nightfallEmbed.fields = [
                         {
                             name: 'Start Date:',
@@ -477,27 +531,28 @@ function nightfalls(channelIDArg) {
                         },
                         {
                             name: 'Modifiers:',
-                            value: `PH`,
+                            value: `${modifiers}`,
                             inline: false
                         },
                         {
                             name: 'Challenges:',
-                            value: `PH`,
+                            value: `${challenges}`,
                             inline: false
                         },
                     ]
+
+                    nightfallEmbed.thumbnail = {
+                        url: nightfallEmbedIcon
+                    };
+                    console.log('Done.');
                     return bot.sendMessage({
                         to: channelIDArg,
                         message: '',
                         embed: nightfallEmbed,
                         typing: true
                     });
-                    console.log('Done.');
                 })
-
-
         })
-
 }
 // #endregion
 
