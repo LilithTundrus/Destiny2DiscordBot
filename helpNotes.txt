@@ -1,3 +1,5 @@
+Note: Don't Include brackets in the commands!
+
 **%about**
 
 Display information about the bot
@@ -5,3 +7,5 @@ Display information about the bot
 **%nightfall**
 
 Get the weekly Nightfall info
+
+**%profile <BattleTag#1234>
