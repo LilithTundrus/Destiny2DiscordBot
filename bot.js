@@ -687,10 +687,15 @@ function getCharacterDataPC(destinyMembershipID, characterID) {
         })
 }
 
+/**
+ * Get a Destiny 2 milestone data by its hash
+ * 
+ * @param {number | string} hashArg 
+ * @returns {Promise & JSON}
+ */
 function getMilestonByHash(hashArg) {
-    return traveler.getPublicMilestones()
+    return traveler.getPublicMilestones()                           // Call traveler getPublicMileStons as a promise
         .then((mileStoneData) => {
-            //get the passed milestone hash
             return mileStoneData.Response[hashArg];
         })
         .catch((err) => {
