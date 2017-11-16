@@ -27,7 +27,7 @@ var destinyManifest;
 setInterval(refreshManifest, 12 * 60 * 60 * 1000);
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0020';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0021';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -37,9 +37,7 @@ Notes:
 - Region comments should work in atom/VSCode
 - For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!!! asjdfhljkfl
 
-TODO: Create a really good middleware solution for the Destiny/Traveler API
 TODO: create config-template
-TODO: clean up currently working components and outline what they do
 TODO: figure out proper way to do Oauth (look at spirit's code)
 TODO: fully extend enumHelper
 TODO: move miscFunctions to /lib
@@ -50,6 +48,7 @@ TODO: find a way to keep the manifest fresh
 TODO: create a hash decoder function for the DB (promise based)
 TODO: move help commands to a JSON array file
 TODO: allow for help <command> to get more info on a command
+TODO: reduce code by writing it smarter
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
