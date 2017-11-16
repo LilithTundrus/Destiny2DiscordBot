@@ -13,5 +13,3 @@ exports.destiny2ClanID = 'YOUR_CLAN_ID_HERE';
 
 //Icons/Image locations
 exports.travelerIcon = 'IMAGE_LOCATION_FOR_BOT';
-
-//put anything else sensitive here and upload as config template
