@@ -1,13 +1,13 @@
 'use strict';                                                       // Allow less 'bad' code
-//custom requires/libs
+// Custom requires/libs
 const config = require('./config.js');                              // Conifg/auth data
 const dsTemplates = require('./dsTemplates.js');                    // Templates for Discord messages
 const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums (common ones anyway)
-//npm packages
+// npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
 var chalk = require('chalk');                                       // Console.logging colors!
-//traveler helpers/classes/enums
+// traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
 var profilesType = Enums.ComponentType.Profiles;                    // Access the-traveler enums
@@ -22,13 +22,13 @@ const traveler = new Traveler({                                     // Must be d
 });
 // Init the Destiny 2 DB to call for hash IDs on items/basically anything hased
 var destinyManifest;
-createNewManifest()
-    .then((newDestinyManifest) => {
-        return destinyManifest = newDestinyManifest;                // Somewhat janky. Will do for now
-    })
+
+//refresh the manifest every 12 hours
+setInterval(refreshManifest, 12 * 60 * 60 * 1000);
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
 const ver = '0.0.0020';                                             // Arbitrary version for knowing which bot version is deployed
+
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -59,6 +59,8 @@ bot.on('ready', function (evt) {                                    // Do some l
     console.log('Connected to Discord...');
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
+    //refresh the Destiny manifest data
+    refreshManifest();
     bot.setPresence({                                               // Make the bot 'play' soemthing
         idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
         game: { name: 'Destiny 2' }
@@ -114,23 +116,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 }
                 break;
 
-            //debugging command
-            case 'manifest':
-                var query = message.substring(10);
-                console.log('\n\n\n\n\n\n\n\n\n\n\n' + query)
-                queryDestinyManifest(query)
-                    .then((queryResult) => {
-                        var queryEmbed = new dsTemplates.baseDiscordEmbed;
-                        queryEmbed.description = queryResult[0].json.toString().substring(0, 1000)
-                        console.log(queryResult)
-                        bot.sendMessage({
-                            to: channelID,
-                            message: '',
-                            embed: queryEmbed,
-                            typing: true
-                        });
-                    });
-                break;
             case 'clantest':
                 getClanWeeklyRewardStateData()
                     .then((rewardData) => {
@@ -702,6 +687,15 @@ function getMilestonByHash(hashArg) {
             console.log(err);
         })
 }
+
+function refreshManifest() {
+    return createNewManifest()
+        .then((newDestinyManifest) => {
+            console.log(chalk.bold('Manifest refreshed'));
+            return destinyManifest = newDestinyManifest;                // Somewhat janky. Will do for now
+        })
+}
+
 
 
 // #endregion
