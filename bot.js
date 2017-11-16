@@ -28,7 +28,7 @@ createNewManifest()
     })
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0020';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0020';                                             // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -44,11 +44,11 @@ TODO: figure out proper way to do Oauth (look at spirit's code)
 TODO: fully extend enumHelper
 TODO: move miscFunctions to /lib
 TODO: parse more data from the extra component endpoints in enum ComponentType
-TODO: fully abstract now-working DB
-TODO: fix eveything
+TODO: clean up code
 TODO: set up bot DB for player/clan rosters
 TODO: find a way to keep the manifest fresh
 TODO: create a hash decoder function for the DB (promise based)
+TODO: move help commands to a JSON array file
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -60,7 +60,7 @@ bot.on('ready', function (evt) {                                    // Do some l
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
     bot.setPresence({                                               // Make the bot 'play' soemthing
-        idle_since: null,
+        idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
         game: { name: 'Destiny 2' }
     });
 });
@@ -113,15 +113,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     return getProfile(channelID, playerName);
                 }
                 break;
-            case 'ms':
-                getMileStones()
-                    .then(mileStones => {
-                        bot.sendMessage({
-                            to: channelID,
-                            message: mileStones
-                        });
-                    });
-                break;
+
             //debugging command
             case 'manifest':
                 var query = message.substring(10);
@@ -574,29 +566,6 @@ function searchForDestinyPlayerPC(playerArg) {
         }).catch(err => {
             console.log(err);
             return err;
-        });
-}
-
-//this should be renamed since it's aggregating a lot of data from multiple D2 API endpoints
-function getMileStones() {
-    return traveler
-        .getPublicMilestones()
-        .then(data => {
-            //get the data.Response object keys since they are hashes and can change
-            Object.keys(data.Response).forEach(function (key) {
-                console.log(key, data.Response[key].endDate);
-                console.log(key, data.Response[key]);
-                console.log('\n' + key);
-                //once we have the hash(key) we can call the getMileStoneContent to get the rest of the data
-                return traveler.getPublicMilestoneContent(key)
-                    .then(mileStoneData => {
-                        console.log(mileStoneData.Response);
-                    });
-            });
-            return JSON.stringify(data.Response).substring(0, 1000);
-        })
-        .catch(err => {
-            console.log(err);
         });
 }
 
