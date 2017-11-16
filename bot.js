@@ -49,6 +49,7 @@ TODO: set up bot DB for player/clan rosters
 TODO: find a way to keep the manifest fresh
 TODO: create a hash decoder function for the DB (promise based)
 TODO: move help commands to a JSON array file
+TODO: allow for help <command> to get more info on a command
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -79,11 +80,11 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'help':                                            // Display the help file
                 return help(channelID);
                 break;
-            case 'about':
+            case 'about':                                           // Display info about the bot
                 return about(channelID);
                 break;
-            //mostly for debugging
-            case 'searchplayer':
+            case 'searchplayer':                                    // Mostly for debugging
+
                 if (message.length < 14 || message.trim().length < 14) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                     errMessageEmbed.description = `Please provide an argument`;
@@ -134,36 +135,32 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 });
 
 // #region discordMessageFunctions
-function about(channelIDArg) {                                           // Send the bot about message
-    //set up embed message
-    let aboutEmbed = new dsTemplates.baseDiscordEmbed;
+function about(channelIDArg) {                                       // Send the bot about message
+    let aboutEmbed = new dsTemplates.baseDiscordEmbed;               // Set up embed message
     aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
     aboutEmbed.color = 3447003;
     aboutEmbed.title = `${bot.username} ${ver}`;
-    aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--';
+    aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--'
+        + '\nThe Traveler is a bot writtin in Node (ES6) to display useful info about the Destiny 2 from the D2 API endpoints';
     aboutEmbed.fields =
-        [{
-            name: 'Process Info',
-            //CPU load average only works on unix/linux host 
-            value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
-            inline: true
-        },
-        {
-            name: 'Uptime',
-            value: formatTime(process.uptime()),
-            inline: true
-        },
-        {
-            name: 'PH',
-            value: 'PH',
-            inline: true
-        },
-        {
-            name: 'PH',
-            value: 'PH',
-            inline: true
-        },];
-
+        [
+            {
+                name: 'Process Info',
+                //CPU load average only works on unix/linux host 
+                value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
+                inline: true
+            },
+            {
+                name: 'Uptime',
+                value: formatTime(process.uptime()),
+                inline: true
+            },
+            {
+                name: 'PH',
+                value: 'PH',
+                inline: true
+            },
+        ];
     bot.sendMessage({
         to: channelIDArg,
         message: '',
@@ -172,10 +169,9 @@ function about(channelIDArg) {                                           // Send
     });
 }
 
-function help(channelIDArg) {                                           // Help message as a function due to it needing to be repeatedly called
+function help(channelIDArg) {                                       // Help message as a function due to it needing to be repeatedly called
     let helpMsg = fs.readFileSync('./helpNotes.txt');
-    //set up embed message
-    var helpEmbed = new dsTemplates.baseDiscordEmbed;
+    var helpEmbed = new dsTemplates.baseDiscordEmbed;                   // Set up embed message
     helpEmbed.title = '**Available Commands**';
     let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
     helpEmbed.description = helpString + helpMsg.toString();
@@ -199,7 +195,7 @@ function searchplayer(channelIDArg, playerName) {
         .then((playerData) => {
             if (playerData.Response[0]) {
                 var playerID = playerData.Response[0].membershipId.toString();
-                return getPlayerProfile(playerID)                                   // Get the extra stuff like their icon
+                return getPlayerProfile(playerID)                   // Get the extra stuff like their icon
                     .then((playerCharData) => {
                         var emblemURL = destiny2BaseURL + playerCharData[0].emblemPath;
                         var lightLevel = playerCharData[0].light
@@ -227,7 +223,7 @@ function searchplayer(channelIDArg, playerName) {
                                 inline: true
                             },
                             {
-                                name: 'Most recent character light level (Alpha testing):',
+                                name: 'Most recent character light level:',
                                 value: lightLevel,
                                 inline: true
                             },
@@ -287,7 +283,7 @@ function searchplayer(channelIDArg, playerName) {
  * @returns {Promise}
  */
 function getProfile(channelIDArg, playerName) {
-    return searchForDestinyPlayerPC(playerName)                     // find the player's ID (by name)
+    return searchForDestinyPlayerPC(playerName)                     // Find the player's ID (by name)
         .then((playerData) => {
             //set up vars to assign with data later
             var playerEquipMentArray = [];
@@ -304,12 +300,11 @@ function getProfile(channelIDArg, playerName) {
             var playerLastOnline;
             if (playerData.Response[0]) {
                 playerID = playerData.Response[0].membershipId.toString();
-                return getMostRecentPlayedCharID(playerID)                                   // Get the extra stuff like their icon
+                return getMostRecentPlayedCharID(playerID)          // Get the extra stuff like their icon
                     .then((characterID) => {
                         console.log('PC Recent player call finished..');
                         console.log(characterID);
-                        //get character data with the ID
-                        return getCharacterDataPC(playerID, characterID)
+                        return getCharacterDataPC(playerID, characterID)    // Get character data with the ID
                             .then((characterData) => {
                                 var promiseTail = Promise.resolve();
                                 console.log('Got character data by ID');
@@ -344,11 +339,11 @@ function getProfile(channelIDArg, playerName) {
                                                 }
                                             })
                                     })
-                                })
+                                });
                                 return promiseTail;
                             })
                             .then(() => {
-                                //piece together and send the message
+                                // Piece together and send the message
                                 var playerProfileEmbed = new dsTemplates.baseDiscordEmbed;
                                 playerProfileEmbed.author = {
                                     name: playerData.Response[0].displayName,
@@ -429,21 +424,21 @@ function nightfalls(channelIDArg) {
             var nightfallModifiersDecoded = [];
             var nightfallChallengesEncoded = [];
             var nightfallChallengesDecoded = [];
-            //get the base data
+            // Get the base data
             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyActivityDefinition WHERE json LIKE '%${nightfallData.availableQuests[0].activity.activityHash}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
                 .then((queryData) => {
-                    //this query contains the nightfall description and name
+                    // This query contains the nightfall description and name
                     let nightfallQueryData = JSON.parse(queryData[0].json);
                     console.log(nightfallQueryData);
                     nightfallEmbedTitle = nightfallQueryData.displayProperties.name;
                     nightfallEmbedDescription = nightfallQueryData.displayProperties.description;
                     nightfallEmbedIcon = destiny2BaseURL + nightfallQueryData.displayProperties.icon;
-                    //get the challenge hashes from the DB
+                    // Get the challenge hashes from the DB
                     nightfallQueryData.challenges.forEach((challenge, index) => {
                         nightfallChallengesEncoded.push(challenge.objectiveHash);
                     })
                     console.log(nightfallChallengesEncoded);
-                    //decode the challenges
+                    // Decode the challenges
                     var promiseTail = Promise.resolve();
                     nightfallChallengesEncoded.forEach((challengeHash, index) => {
                         promiseTail = promiseTail.then(() => {
@@ -462,36 +457,32 @@ function nightfalls(channelIDArg) {
 
                         })
                     })
+                    // Modifiers are already in the base nightfallData
                     nightfallData.availableQuests[0].activity.modifierHashes.forEach((entry, index) => {
                         promiseTail = promiseTail.then(() => {
                             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyActivityModifierDefinition WHERE json LIKE '%${entry}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
                                 .then((queryData) => {
-                                    //console.log(queryData);
                                     let modifierJSON = JSON.parse(queryData[0].json);
-                                    console.log(modifierJSON)
                                     var modifier = {};
                                     modifier.name = modifierJSON.displayProperties.name;
-                                    modifier.description = modifierJSON.displayProperties.description
+                                    modifier.description = modifierJSON.displayProperties.description;
                                     nightfallModifiersDecoded.push(modifier);
                                 })
                         })
-
                     })
                     return promiseTail;
                 })
                 .then(() => {
-                    //create date Objects to handle moving the true timestamps to human readable
+                    // Create date Objects to handle moving the true timestamps to human readable
                     let startDate = new Date(nightfallData.startDate).toDateString();
                     let endDate = new Date(nightfallData.endDate).toDateString();
-                    //format the challenges to fit into a field value
+                    // Format the challenges and modifiers to fit into a field value
                     let challenges = nightfallChallengesDecoded.map(function (elem) {
                         return '\n\n**' + elem.name + ':** \n' + elem.description;
-                    }).join('  ')
-                    console.log(challenges);
+                    }).join('  ');
                     let modifiers = nightfallModifiersDecoded.map(function (elem) {
                         return '\n\n**' + elem.name + ':** \n' + elem.description;
-                    }).join('  ')
-
+                    }).join('  ');
                     var nightfallEmbed = new dsTemplates.baseDiscordEmbed;
                     nightfallEmbed.title = nightfallEmbedTitle;
                     nightfallEmbed.description = `_${nightfallEmbedDescription}_`;
@@ -517,11 +508,9 @@ function nightfalls(channelIDArg) {
                             inline: false
                         },
                     ]
-
                     nightfallEmbed.thumbnail = {
                         url: nightfallEmbedIcon
                     };
-                    console.log('Done.');
                     return bot.sendMessage({
                         to: channelIDArg,
                         message: '',
@@ -546,7 +535,6 @@ function searchForDestinyPlayerPC(playerArg) {
     return traveler
         .searchDestinyPlayer('4', encodedPlayerArg)
         .then(player => {
-            console.log(player);
             return player;                                          // For battle.net (PC) there should only ever be one player!
         }).catch(err => {
             console.log(err);
@@ -604,11 +592,8 @@ function getClanWeeklyRewardStateData() {
 function getPlayerProfile(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
         .then((profileData) => {
-            console.log(profileData);
             var characterDataArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
-                console.log('\n' + key);
-                console.log(profileData.Response.characters.data[key])
                 characterDataArray.push(profileData.Response.characters.data[key]);
             });
             return characterDataArray;
@@ -629,17 +614,16 @@ function getPlayerProfile(destinyMembershipID) {
 function getMostRecentPlayedCharID(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [100, 200] })
         .then((profileData) => {
-            //set up variables to push/assign
+            // Set up variables to push/assign
             var mostRecentCharacterID = 0;
             var characterDataArray = [];
             var dateComparisonArray = [];
             Object.keys(profileData.Response.characters.data).forEach(function (key) {
-                console.log('\n' + key);
-                //push the data from the key of the obj since we can directly reference it since they change
+                // Push the data from the key of the obj since we can directly reference it since they change
                 characterDataArray.push(profileData.Response.characters.data[key]);
                 dateComparisonArray.push({ MeasureDate: profileData.Response.characters.data[key].dateLastPlayed })
             });
-            //compare the character's last played dates to get the most rcent character
+            // Compare the character's last played dates to get the most rcent character
             var latestPlayedDate = getLatestDate(dateComparisonArray);
             characterDataArray.forEach((entry, index) => {
                 if (entry.dateLastPlayed == latestPlayedDate) {
@@ -696,8 +680,6 @@ function refreshManifest() {
         })
 }
 
-
-
 // #endregion
 
 
@@ -729,10 +711,8 @@ function getLatestDate(data) {
     }).sort(function (item1, item2) {
         return (item1.in_ms < item2.in_ms)
     });
-
-    // take latest
+    // Take latest
     var latest = sorted[0];
-
     return latest.original_str;
 }
 
