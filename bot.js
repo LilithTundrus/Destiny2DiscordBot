@@ -27,7 +27,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0021';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0022';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -63,7 +63,6 @@ bot.on('ready', function (evt) {                                    // Do some l
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
     //refresh the Destiny manifest data
     refreshManifest();
-    getGearRenderManifest();
     bot.setPresence({                                               // Make the bot 'play' soemthing
         idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
         game: { name: 'Destiny 2' }
@@ -86,7 +85,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 return about(channelID);
                 break;
             case 'searchplayer':                                    // Mostly for debugging
-
                 if (message.length < 14 || message.trim().length < 14) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                     errMessageEmbed.description = `Please provide an argument`;
@@ -130,6 +128,22 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'nightfall':                                       // Get the Nightfall data
                 nightfalls(channelID);
+                break;
+            case 'item':
+                if (message.length < 9 || message.trim().length < 9) {
+                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                    errMessageEmbed.description = `Please provide an argument at least 3 characters long`;
+                    errMessageEmbed.title = 'Error:';
+                    bot.sendMessage({
+                        to: channelID,
+                        message: '',
+                        embed: errMessageEmbed,
+                        typing: true
+                    });
+                } else {
+                    let itemQuery = message.substring(6);
+                    itemSearch(channelID, itemQuery);
+                }
                 break;
             // Just add any case commands here
         }
@@ -521,6 +535,33 @@ function nightfalls(channelIDArg) {
                     });
                 })
         })
+}
+
+function itemSearch(channelIDArg, itemQuery) {
+    return queryItemsByName(itemQuery)
+        .then((queryData) => {
+            if (queryData[0] == null) {
+                let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                errMessageEmbed.description = `I couldn't find an item that contains ${itemQuery}`;
+                errMessageEmbed.title = 'Error:';
+                return bot.sendMessage({
+                    to: channelIDArg,
+                    message: '',
+                    embed: errMessageEmbed,
+                    typing: true
+                });
+            }
+            console.log(queryData);
+            let itemEmbed = new dsTemplates.baseDiscordEmbed;
+            itemEmbed.description = 'AAAAAAA'
+            bot.sendMessage({
+                to: channelIDArg,
+                message: '',
+                embed: itemEmbed,
+                typing: true
+            });
+        })
+
 }
 // #endregion
 
