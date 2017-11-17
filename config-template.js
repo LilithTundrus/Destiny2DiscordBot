@@ -13,3 +13,10 @@ exports.destiny2ClanID = 'YOUR_CLAN_ID_HERE';
 
 //Icons/Image locations
 exports.travelerIcon = 'IMAGE_LOCATION_FOR_BOT';
+
+//Element icons 
+exports.elements = {
+    2: 'https://i.imgur.com/pR2hu13.png',
+    3: 'https://i.imgur.com/paWpNGd.png',
+    4: 'https://i.imgur.com/RHDetvb.png'
+}
