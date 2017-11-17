@@ -23,8 +23,8 @@ const traveler = new Traveler({                                     // Must be d
 // Init the Destiny 2 DB to call for hash IDs on items/basically anything hased
 var destinyManifest;
 
-//refresh the manifest every 12 hours
-setInterval(refreshManifest, 12 * 60 * 60 * 1000);
+//refresh the manifest every 3 hours
+setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
 const ver = '0.0.0021';                                             // Arbitrary version for knowing which bot version is deployed
@@ -35,7 +35,8 @@ Notes:
 - Current design goal is PC ONLY
 - Do everything that doesn't involve the DB first!
 - Region comments should work in atom/VSCode
-- For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!!! asjdfhljkfl
+- For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!
+- Trying to render characters is too hard (for now)
 
 TODO: create config-template
 TODO: figure out proper way to do Oauth (look at spirit's code)
@@ -49,6 +50,7 @@ TODO: create a hash decoder function for the DB (promise based)
 TODO: move help commands to a JSON array file
 TODO: allow for help <command> to get more info on a command
 TODO: reduce code by writing it smarter
+TODO: get stat codes from spirit for weapons
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -61,6 +63,7 @@ bot.on('ready', function (evt) {                                    // Do some l
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
     //refresh the Destiny manifest data
     refreshManifest();
+    getGearRenderManifest();
     bot.setPresence({                                               // Make the bot 'play' soemthing
         idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
         game: { name: 'Destiny 2' }
@@ -99,7 +102,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     return searchplayer(channelID, playerName);
                 }
                 break;
-            case 'profile':
+            case 'profile':                                         // Use level 1 D2 API data to get a player's profile
                 if (message.length < 9 || message.trim().length < 9) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                     errMessageEmbed.description = `Please provide an argument`;
@@ -125,7 +128,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                         });
                     });
                 break;
-            case 'nightfall':
+            case 'nightfall':                                       // Get the Nightfall data
                 nightfalls(channelID);
                 break;
             // Just add any case commands here
@@ -542,7 +545,7 @@ function searchForDestinyPlayerPC(playerArg) {
 }
 
 /**
- * Create an instanced DB of the D2 Manifest to query
+ * Create an instanced DB of the D2 STANDARD Manifest to query
  * 
  * @returns {Promise}
  */
@@ -581,10 +584,10 @@ function queryDestinyManifest(query) {
 }
 
 function getClanWeeklyRewardStateData() {
-    return traveler.getClanWeeklyRewardState(config.destiny2ClanID)
+    return traveler.getClanLeaderboards(config.destiny2ClanID, { components: [200] })
         .then((data) => {
-            console.log(data.Response.rewards[0].entries);
-            return data.Response.rewards;
+            console.log(data.Response)
+            return data;
         });
 }
 
@@ -679,8 +682,18 @@ function refreshManifest() {
         })
 }
 
-// #endregion
+function queryItemsByName(nameQuery) {
+    return destinyManifest.queryManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"name":"${nameQuery}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+        .then(queryResult => {
+            return queryResult;
+        })
+        .catch(err => {
+            console.log(err);
+            return err;
+        });
+}
 
+// #endregion
 
 // #region miscFunctions
 
