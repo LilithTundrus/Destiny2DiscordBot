@@ -51,6 +51,7 @@ TODO: move help commands to a JSON array file
 TODO: allow for help <command> to get more info on a command
 TODO: reduce code by writing it smarter
 TODO: get stat codes from spirit for weapons
+TODO: add xur locations
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -145,6 +146,38 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     itemSearch(channelID, itemQuery);
                 }
                 break;
+            case 'emojify':                                     // This is a stupid thing
+                //turn a string into emoji regional indicators
+                if (message.length < 9 || message.trim().length < 9) {
+                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                    errMessageEmbed.description = `Please give me a string to emojify`;
+                    errMessageEmbed.title = 'Error:';
+                    bot.sendMessage({
+                        to: channelID,
+                        message: '',
+                        embed: errMessageEmbed,
+                        typing: true
+                    });
+                } else {
+                    let emojifyStr = message.substring(9).toLowerCase();
+                    var emojiString = '';
+                    for (var i = 0; i < emojifyStr.length; i++) {
+                        if(emojifyStr.charAt(i) == ' ') {
+                            //do nothing
+                        }else if (emojifyStr.charAt(i) == 'b') {
+                            emojiString = emojiString + ` :b: `
+                        } else {
+                            emojiString = emojiString + ` :regional_indicator_${emojifyStr.charAt(i)}: `
+                        }
+                    }
+                    console.log(emojiString)
+                    bot.sendMessage({
+                        to: channelID,
+                        message: emojiString,
+                        typing: true
+                    });
+                }
+
             // Just add any case commands here
         }
     }
@@ -540,7 +573,7 @@ function nightfalls(channelIDArg) {
 function itemSearch(channelIDArg, itemQuery) {
     return queryItemsByName(itemQuery)
         .then((queryData) => {
-            if (queryData[0] == null) {
+            if (queryData[0] == null) {                             // Make sure the DB carries a response
                 let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                 errMessageEmbed.description = `I couldn't find an item that contains ${itemQuery}`;
                 errMessageEmbed.title = 'Error:';
@@ -551,9 +584,17 @@ function itemSearch(channelIDArg, itemQuery) {
                     typing: true
                 });
             }
-            console.log(queryData);
+            let itemJSON = JSON.parse(queryData[0].json);
+            //Determine if weapon or armor by checking damage type, 0 being armor
+
+            //Decode the stats here
+            //Get the icon here
+            //
+
+            console.log(itemJSON)
             let itemEmbed = new dsTemplates.baseDiscordEmbed;
-            itemEmbed.description = 'AAAAAAA'
+            itemEmbed.title = itemJSON.displayProperties.name
+            itemEmbed.description = `_${itemJSON.displayProperties.description}_`
             bot.sendMessage({
                 to: channelIDArg,
                 message: '',
