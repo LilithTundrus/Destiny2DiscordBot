@@ -140,7 +140,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             // Just add any case commands here
             default:
             var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-            errMessageEmbed.description = `${message} is not recognized as an innternal or external command. Type %help for help`;
+            errMessageEmbed.description = `${message} is not recognized as an innternal or external command. Type %help for help    `;
             errMessageEmbed.title = 'Error:';
             bot.sendMessage({
                 to: channelID,
