@@ -7,6 +7,7 @@ const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to
 var Discord = require('discord.io');                                // Discord API wrapper
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
 var chalk = require('chalk');                                       // Console.logging colors!
+var emoji = require('node-emoji');
 // traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
@@ -117,16 +118,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     return getProfile(channelID, playerName);
                 }
                 break;
-
-            case 'clantest':
-                getClanWeeklyRewardStateData()
-                    .then((rewardData) => {
-                        bot.sendMessage({
-                            to: channelID,
-                            message: JSON.stringify(rewardData, null, 2)
-                        });
-                    });
-                break;
             case 'nightfall':                                       // Get the Nightfall data
                 nightfalls(channelID);
                 break;
@@ -146,38 +137,6 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                     itemSearch(channelID, itemQuery);
                 }
                 break;
-            case 'emojify':                                     // This is a stupid thing
-                //turn a string into emoji regional indicators
-                if (message.length < 9 || message.trim().length < 9) {
-                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                    errMessageEmbed.description = `Please give me a string to emojify`;
-                    errMessageEmbed.title = 'Error:';
-                    bot.sendMessage({
-                        to: channelID,
-                        message: '',
-                        embed: errMessageEmbed,
-                        typing: true
-                    });
-                } else {
-                    let emojifyStr = message.substring(9).toLowerCase();
-                    var emojiString = '';
-                    for (var i = 0; i < emojifyStr.length; i++) {
-                        if(emojifyStr.charAt(i) == ' ') {
-                            //do nothing
-                        }else if (emojifyStr.charAt(i) == 'b') {
-                            emojiString = emojiString + ` :b: `
-                        } else {
-                            emojiString = emojiString + ` :regional_indicator_${emojifyStr.charAt(i)}: `
-                        }
-                    }
-                    console.log(emojiString)
-                    bot.sendMessage({
-                        to: channelID,
-                        message: emojiString,
-                        typing: true
-                    });
-                }
-
             // Just add any case commands here
         }
     }
@@ -604,6 +563,7 @@ function itemSearch(channelIDArg, itemQuery) {
         })
 
 }
+
 // #endregion
 
 // #region D2APIFunctions
@@ -662,14 +622,6 @@ function queryDestinyManifest(query) {
         }).catch(err => {
             console.log(err);
             return err;
-        });
-}
-
-function getClanWeeklyRewardStateData() {
-    return traveler.getClanLeaderboards(config.destiny2ClanID, { components: [200] })
-        .then((data) => {
-            console.log(data.Response)
-            return data;
         });
 }
 
@@ -850,5 +802,3 @@ function timeDifference(current, previous) {
         return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
     }
 }
-// #endregion
-
