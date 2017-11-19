@@ -555,12 +555,12 @@ function itemSearch(channelIDArg, itemQuery) {
             //Determine if weapon or armor by checking damage type, 0 being armor
             //get non-item type specific data (socket stuff)
             itemJSON.sockets.socketEntries.forEach((entry, index) => {
+                //perks can be called by their index (not the hash)
                 console.log(entry)
             })
             if (itemJSON.defaultDamageType == 0) {  //  Armor type
                 //decode stats
                 Object.keys(itemJSON.stats.stats).forEach(function (key) {
-                    console.log(itemJSON.stats.stats[key])
                     if (enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash) == 'Defense') {
                         //get the min/max stats for defense
                         stats.push(`Defense: ${itemJSON.stats.stats[key].minimum}-${itemJSON.stats.stats[key].maximum}`)
@@ -575,12 +575,14 @@ function itemSearch(channelIDArg, itemQuery) {
             } else {
                 //weapon type
                 Object.keys(itemJSON.stats.stats).forEach(function (key) {
-                    console.log(itemJSON.stats.stats[key]);
                     //decode the stats
                     if (enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash) == 'Unknown') {
-                        return //do nothing for this item
+                        return; //do nothing for this item
+                    } else if (enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash) == 'Attack') {
+                        stats.push(`Attack: ${itemJSON.stats.stats[key].minimum}-${itemJSON.stats.stats[key].maximum}`)
+                        return; //disallow for re-push after first check
                     }
-                    stats.push(`${enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash)}: ${itemJSON.stats.stats[key].value}`)
+                    stats.push(`${enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash)}: ${itemJSON.stats.stats[key].value}\u200B`)
                 });
             }
             //Decode the stats here
@@ -593,13 +595,17 @@ function itemSearch(channelIDArg, itemQuery) {
             itemEmbed.title = `${itemJSON.displayProperties.name}`;
             itemEmbed.description = `_${itemJSON.displayProperties.description}_ `;
             let statsEmbed = stats.map(function (elem) {
-                return '\n' + elem;
+                return '\n' + elem + '\t';
             }).join('  ');
             itemEmbed.fields = [
                 {
                     name: 'Stats',
                     value: statsEmbed,
                     inline: true
+                },
+                {
+                    name: 'Perks',
+                    value: 'AAAAAAAAAAAAAAAAAAAAAAAA'
                 },
             ];
             itemEmbed.thumbnail = {
