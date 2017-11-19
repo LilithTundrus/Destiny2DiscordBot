@@ -544,16 +544,31 @@ function itemSearch(channelIDArg, itemQuery) {
                 });
             }
             let itemJSON = JSON.parse(queryData[0].json);
+            var itemIconURL = destiny2BaseURL + itemJSON.displayProperties.icon;
             //Determine if weapon or armor by checking damage type, 0 being armor
-
+            if (itemJSON.defaultDamageType == 0) {
+                //armor type
+            }
             //Decode the stats here
-            //Get the icon here
+            //Get the damage type icon here
             //
 
+
+            //paginate the results
             console.log(itemJSON)
             let itemEmbed = new dsTemplates.baseDiscordEmbed;
-            itemEmbed.title = itemJSON.displayProperties.name
-            itemEmbed.description = `_${itemJSON.displayProperties.description}_`
+
+            itemEmbed.title = itemJSON.displayProperties.name;
+            itemEmbed.description = `_${itemJSON.displayProperties.description}_`;
+            itemEmbed.fields = [
+                {
+                    name: 'Stats',
+                    value: 'PH'
+                },
+            ];
+            itemEmbed.thumbnail = {
+                url: itemIconURL
+            };
             bot.sendMessage({
                 to: channelIDArg,
                 message: '',
