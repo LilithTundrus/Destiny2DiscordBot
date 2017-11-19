@@ -554,7 +554,9 @@ function itemSearch(channelIDArg, itemQuery) {
             var itemIconURL = destiny2BaseURL + itemJSON.displayProperties.icon;
             //Determine if weapon or armor by checking damage type, 0 being armor
             //get non-item type specific data (socket stuff)
-
+            itemJSON.sockets.socketEntries.forEach((entry, index) => {
+                console.log(entry)
+            })
             if (itemJSON.defaultDamageType == 0) {  //  Armor type
                 //decode stats
                 Object.keys(itemJSON.stats.stats).forEach(function (key) {
@@ -572,6 +574,14 @@ function itemSearch(channelIDArg, itemQuery) {
 
             } else {
                 //weapon type
+                Object.keys(itemJSON.stats.stats).forEach(function (key) {
+                    console.log(itemJSON.stats.stats[key]);
+                    //decode the stats
+                    if (enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash) == 'Unknown') {
+                        return //do nothing for this item
+                    }
+                    stats.push(`${enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash)}: ${itemJSON.stats.stats[key].value}`)
+                });
             }
             //Decode the stats here
             //Get the damage type icon here
