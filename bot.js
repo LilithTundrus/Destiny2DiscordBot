@@ -3,6 +3,7 @@
 const config = require('./config.js');                              // Conifg/auth data
 const dsTemplates = require('./dsTemplates.js');                    // Templates for Discord messages
 const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums (common ones anyway)
+const constants = require('./lib/constants.js')
 // npm packages
 var Discord = require('discord.io');                                // Discord API wrapper
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
@@ -63,11 +64,10 @@ bot.on('ready', function (evt) {                                    // Do some l
     console.log('Connected to Discord...');
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
     console.log(`Bot version ${ver} started at ${new Date().toISOString()}`);
-    //refresh the Destiny manifest data
-    refreshManifest();
+    refreshManifest();                                              // Refresh the Destiny manifest data    
     bot.setPresence({                                               // Make the bot 'play' soemthing
         idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
-        game: { name: 'Destiny 2' }
+        game: { name: 'Getting Caballed' }
     });
 });
 
@@ -532,6 +532,7 @@ function nightfalls(channelIDArg) {
 function itemSearch(channelIDArg, itemQuery) {
     return queryItemsByName(itemQuery)
         .then((queryData) => {
+            var stats = [];
             if (queryData[0] == null) {                             // Make sure the DB carries a response
                 let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                 errMessageEmbed.description = `I couldn't find an item that contains ${itemQuery}`;
@@ -544,26 +545,51 @@ function itemSearch(channelIDArg, itemQuery) {
                 });
             }
             let itemJSON = JSON.parse(queryData[0].json);
+            console.log(itemJSON);
+
+            //get the tier type and assign the embed color based off that
+            let itemTier = itemJSON.inventory.tierTypeName;
+            let itemType = itemJSON.itemTypeDisplayName;
+            let itemColor = constants.tierColors[itemTier];
             var itemIconURL = destiny2BaseURL + itemJSON.displayProperties.icon;
             //Determine if weapon or armor by checking damage type, 0 being armor
-            if (itemJSON.defaultDamageType == 0) {
-                //armor type
+            //get non-item type specific data (socket stuff)
+
+            if (itemJSON.defaultDamageType == 0) {  //  Armor type
+                //decode stats
+                Object.keys(itemJSON.stats.stats).forEach(function (key) {
+                    console.log(itemJSON.stats.stats[key])
+                    if (enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash) == 'Defense') {
+                        //get the min/max stats for defense
+                        stats.push(`Defense: ${itemJSON.stats.stats[key].minimum}-${itemJSON.stats.stats[key].maximum}`)
+                    } else if (enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash) == 'Unknown') {
+                        return;                                     // Ignore the entry
+                    } else {
+                        stats.push(`${enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash)}: ${itemJSON.stats.stats[key].value}`)
+                    }
+                });
+
+
+            } else {
+                //weapon type
             }
             //Decode the stats here
             //Get the damage type icon here
             //
 
-
-            //paginate the results
-            console.log(itemJSON)
+            //paginate the results here
             let itemEmbed = new dsTemplates.baseDiscordEmbed;
-
-            itemEmbed.title = itemJSON.displayProperties.name;
-            itemEmbed.description = `_${itemJSON.displayProperties.description}_`;
+            itemEmbed.color = itemColor;
+            itemEmbed.title = `${itemJSON.displayProperties.name}`;
+            itemEmbed.description = `_${itemJSON.displayProperties.description}_ `;
+            let statsEmbed = stats.map(function (elem) {
+                return '\n' + elem;
+            }).join('  ');
             itemEmbed.fields = [
                 {
                     name: 'Stats',
-                    value: 'PH'
+                    value: statsEmbed,
+                    inline: true
                 },
             ];
             itemEmbed.thumbnail = {
