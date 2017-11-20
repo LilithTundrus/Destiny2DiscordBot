@@ -530,9 +530,15 @@ function nightfalls(channelIDArg) {
 }
 
 function itemSearch(channelIDArg, itemQuery) {
+    var itemTier;
+    var itemType;
+    var itemColor;
+    var itemIconURL;
+    var stats = [];
+    var perks = [];
+    var itemJSON;
     return queryItemsByName(itemQuery)
         .then((queryData) => {
-            var stats = [];
             if (queryData[0] == null) {                             // Make sure the DB carries a response
                 let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                 errMessageEmbed.description = `I couldn't find an item that contains ${itemQuery}`;
@@ -543,20 +549,55 @@ function itemSearch(channelIDArg, itemQuery) {
                     embed: errMessageEmbed,
                     typing: true
                 });
+            } else if (queryData.length > 1) {
+                let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                errMessageEmbed.description = `Pagination isn't ready yet, try searching more specifically for the item`;
+                errMessageEmbed.title = 'Error:';
+                return bot.sendMessage({
+                    to: channelIDArg,
+                    message: '',
+                    embed: errMessageEmbed,
+                    typing: true
+                });
             }
-            let itemJSON = JSON.parse(queryData[0].json);
+            itemJSON = JSON.parse(queryData[0].json);
             console.log(itemJSON);
-
             //get the tier type and assign the embed color based off that
-            let itemTier = itemJSON.inventory.tierTypeName;
-            let itemType = itemJSON.itemTypeDisplayName;
-            let itemColor = constants.tierColors[itemTier];
-            var itemIconURL = destiny2BaseURL + itemJSON.displayProperties.icon;
+            itemTier = itemJSON.inventory.tierTypeName;
+            itemType = itemJSON.itemTypeDisplayName;
+            itemColor = constants.tierColors[itemTier];
+            itemIconURL = destiny2BaseURL + itemJSON.displayProperties.icon;
             //Determine if weapon or armor by checking damage type, 0 being armor
             //get non-item type specific data (socket stuff)
+            var promiseTail = Promise.resolve();
             itemJSON.sockets.socketEntries.forEach((entry, index) => {
-                //perks can be called by their index (not the hash)
+                //perks are very strange -- they need a lot of work still...
                 console.log(entry)
+                entry.reusablePlugItems.forEach((item, itemIndex) => {
+                    //order perks by the same type (sights, etc.)
+                    var perksTemp = [];
+                    promiseTail = promiseTail.then(() => {
+                        return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.plugItemHash}%' ORDER BY json DESC LIMIT 0, 50000;`)
+                            .then((socketQueryData) => {
+                                if (socketQueryData !== null) {
+                                    let socketData = JSON.parse(socketQueryData[0].json)
+                                    if (socketData.plug.plugCategoryIdentifier == 'shader') {
+                                        return; //skip shader slots
+                                    }
+                                    console.log(socketData);
+                                    perks.push(
+                                        {
+                                            name: socketData.displayProperties.name,
+                                            description: socketData.displayProperties.description
+                                        })
+
+                                } else {
+                                    console.log('NO QUERY DATA RETURNED... HANDLE THIS!!!')
+                                }
+                            })
+                    })
+                })
+
             })
             if (itemJSON.defaultDamageType == 0) {  //  Armor type
                 //decode stats
@@ -588,7 +629,10 @@ function itemSearch(channelIDArg, itemQuery) {
             //Decode the stats here
             //Get the damage type icon here
             //
-
+            return promiseTail;
+        })
+        .then(() => {
+            console.log('Done.')
             //paginate the results here
             let itemEmbed = new dsTemplates.baseDiscordEmbed;
             itemEmbed.color = itemColor;
@@ -603,20 +647,25 @@ function itemSearch(channelIDArg, itemQuery) {
                     value: statsEmbed,
                     inline: true
                 },
-                {
-                    name: 'Perks',
-                    value: 'AAAAAAAAAAAAAAAAAAAAAAAA'
-                },
             ];
             itemEmbed.thumbnail = {
                 url: itemIconURL
             };
+            perks.forEach((entry, index) => {
+                itemEmbed.fields.push({
+                    name: entry.name,
+                    value: entry.description
+                })
+            });
             bot.sendMessage({
                 to: channelIDArg,
                 message: '',
                 embed: itemEmbed,
                 typing: true
             });
+        })
+        .catch((err) => {
+            console.log(err)
         })
 
 }
