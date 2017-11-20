@@ -29,7 +29,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0022';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0025';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -50,9 +50,8 @@ TODO: create a hash decoder function for the DB (promise based)
 TODO: move help commands to a JSON array file
 TODO: allow for help <command> to get more info on a command
 TODO: reduce code by writing it smarter
-TODO: get stat codes from spirit for weapons
 TODO: add xur locations
-TODO: error handle
+TODO: error handle all exceptions
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -88,7 +87,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'searchplayer':                                    // Mostly for debugging
                 if (message.length < 14 || message.trim().length < 14) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                    errMessageEmbed.description = `Please provide an argument`;
+                    errMessageEmbed.description = `Please give a player tag to search for`;
                     errMessageEmbed.title = 'Error:';
                     bot.sendMessage({
                         to: channelID,
@@ -104,7 +103,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
             case 'profile':                                         // Use level 1 D2 API data to get a player's profile
                 if (message.length < 9 || message.trim().length < 9) {
                     var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                    errMessageEmbed.description = `Please provide an argument`;
+                    errMessageEmbed.description = `Please provide a player name to search for`;
                     errMessageEmbed.title = 'Error:';
                     bot.sendMessage({
                         to: channelID,
@@ -261,16 +260,7 @@ function searchplayer(channelIDArg, playerName) {
             }
         })
         .catch((err) => {
-            var messageEmbed = new dsTemplates.baseDiscordEmbed;
-            messageEmbed.description = 'I seem to be having an unknown problem. Try again later.';
-            messageEmbed.title = 'Error:';
-            bot.sendMessage({
-                to: channelIDArg,
-                message: '',
-                embed: messageEmbed,
-                typing: true
-            });
-            console.log(err);
+            return sendErrMessage(channelIDArg, err)
         });
 }
 
@@ -409,17 +399,8 @@ function getProfile(channelIDArg, playerName) {
             }
         })
         .catch((err) => {
-            var messageEmbed = new dsTemplates.baseDiscordEmbed;
-            messageEmbed.description = 'I seem to be having an unknown problem. Try again later.';
-            messageEmbed.title = 'Error:';
-            bot.sendMessage({
-                to: channelIDArg,
-                message: '',
-                embed: messageEmbed,
-                typing: true
-            });
-            console.log(err);
-        });
+            return sendErrMessage(channelIDArg, err)
+        })
 }
 
 function nightfalls(channelIDArg) {
@@ -525,6 +506,9 @@ function nightfalls(channelIDArg) {
                         typing: true
                     });
                 })
+        })
+        .catch((err) => {
+            return sendErrMessage(channelIDArg, err);
         })
 }
 
@@ -664,9 +648,23 @@ function itemSearch(channelIDArg, itemQuery) {
             });
         })
         .catch((err) => {
-            console.log(err)
+            return sendErrMessage(channelIDArg, err)
         })
 
+}
+
+function sendErrMessage(channelIDArg, err) {
+    var messageEmbed = new dsTemplates.baseDiscordEmbed;
+    messageEmbed.description = 'I seem to be having an unknown problem. Try again later.\n\nIf the problem persits, please contact the developer at PLACEHOLDER';
+    messageEmbed.title = 'Error:';
+    bot.sendMessage({
+        to: channelIDArg,
+        message: '',
+        embed: messageEmbed,
+        typing: true
+    });
+    console.log(err);
+    fs.writeFileSync('./logs/err.log')
 }
 
 // #endregion
