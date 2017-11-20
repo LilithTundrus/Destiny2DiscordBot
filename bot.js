@@ -40,9 +40,7 @@ Notes:
 - For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!
 - Trying to render characters is too hard (for now)
 
-TODO: create config-template
 TODO: figure out proper way to do Oauth (look at spirit's code)
-TODO: fully extend enumHelper
 TODO: move miscFunctions to /lib
 TODO: parse more data from the extra component endpoints in enum ComponentType
 TODO: clean up code
@@ -54,6 +52,7 @@ TODO: allow for help <command> to get more info on a command
 TODO: reduce code by writing it smarter
 TODO: get stat codes from spirit for weapons
 TODO: add xur locations
+TODO: error handle
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
