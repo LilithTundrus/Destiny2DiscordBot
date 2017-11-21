@@ -651,7 +651,7 @@ function sendErrMessage(channelIDArg, err) {
         typing: true
     });
     console.log(err);
-    fs.writeFileSync('./logs/err.log')
+    fs.appendFileSync('./logs/err.log', err)
 }
 
 // #endregion
