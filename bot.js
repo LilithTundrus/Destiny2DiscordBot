@@ -533,20 +533,18 @@ function itemSearch(channelIDArg, itemQuery) {
                 });
             } else {
                 itemJSON = JSON.parse(queryData[0].json);
-                console.log(itemJSON);
-                //get the tier type and assign the embed color based off that
+                console.log(itemJSON);                              // Debugging
                 itemTier = itemJSON.inventory.tierTypeName;
                 itemType = itemJSON.itemTypeDisplayName;
-                itemColor = constants.tierColors[itemTier];
+                itemColor = constants.tierColors[itemTier];         // Get the tier type and assign the embed color based off that
                 itemIconURL = destiny2BaseURL + itemJSON.displayProperties.icon;
-                //Determine if weapon or armor by checking damage type, 0 being armor
-                //get non-item type specific data (socket stuff)
+                // Get non-item type specific data (socket stuff)
                 var promiseTail = Promise.resolve();
                 itemJSON.sockets.socketEntries.forEach((entry, index) => {
                     //perks are very strange -- they need a lot of work still...
                     console.log(entry)
                     entry.reusablePlugItems.forEach((item, itemIndex) => {
-                        //order perks by the same type (sights, etc.)
+                        // TODO: Order perks by the same type (sights, etc.)
                         var perksTemp = [];
                         promiseTail = promiseTail.then(() => {
                             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.plugItemHash}%' ORDER BY json DESC LIMIT 0, 50000;`)
@@ -554,7 +552,7 @@ function itemSearch(channelIDArg, itemQuery) {
                                     if (socketQueryData !== null) {
                                         let socketData = JSON.parse(socketQueryData[0].json)
                                         if (socketData.plug.plugCategoryIdentifier == 'shader') {
-                                            return; //skip shader slots
+                                            return;                 // Skip shader slots
                                         }
                                         console.log(socketData);
                                         perks.push(
@@ -569,11 +567,12 @@ function itemSearch(channelIDArg, itemQuery) {
                         })
                     })
                 })
-                if (itemJSON.defaultDamageType == 0) {  //  Armor type
-                    //decode stats
+                // Determine if weapon or armor by checking damage type, 0 being armor
+                if (itemJSON.defaultDamageType == 0) {              // Armor type
+                    // Decode stats
                     Object.keys(itemJSON.stats.stats).forEach(function (key) {
                         if (enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash) == 'Defense') {
-                            //get the min/max stats for defense
+                            // Get the min/max stats for defense
                             stats.push(`Defense: ${itemJSON.stats.stats[key].minimum}-${itemJSON.stats.stats[key].maximum}`)
                         } else if (enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash) == 'Unknown') {
                             return;                                     // Ignore the entry
@@ -581,24 +580,21 @@ function itemSearch(channelIDArg, itemQuery) {
                             stats.push(`${enumHelper.getArmorStatType(itemJSON.stats.stats[key].statHash)}: ${itemJSON.stats.stats[key].value}`)
                         }
                     });
-                } else {
-                    //weapon type
-                    //if element, set icon to the correct element
+                } else {                                            // Weapon type
+
+                    // If element, set icon to the correct element
                     elementIconLocation = constants.elements[itemJSON.defaultDamageType]
                     Object.keys(itemJSON.stats.stats).forEach(function (key) {
-                        //decode the stats
+                        // Decode the stats
                         if (enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash) == 'Unknown') {
-                            return; //do nothing for this item
+                            return;                                 // Do nothing for this item
                         } else if (enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash) == 'Attack') {
                             stats.push(`Attack: ${itemJSON.stats.stats[key].minimum}-${itemJSON.stats.stats[key].maximum}`)
-                            return; //disallow for re-push after first check
+                            return;                                 // Disallow for re-push after first check
                         }
                         stats.push(`${enumHelper.getWeaponStatType(itemJSON.stats.stats[key].statHash)}: ${itemJSON.stats.stats[key].value}\u200B`)
                     });
                 }
-                //Decode the stats here
-                //Get the damage type icon here
-                //
                 return promiseTail;
             }
         })
