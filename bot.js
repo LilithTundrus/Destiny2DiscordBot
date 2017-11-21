@@ -27,7 +27,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 // Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0030';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0032';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -45,14 +45,13 @@ Notes:
 //TODO: create a hash decoder function for the DB (promise based)
 //TODO: move help commands to a JSON array file
 //TODO: allow for help <command> to get more info on a command
-//TODO: reduce code by writing it smarter
 //TODO: add xur locations
 //TODO: error handle all exceptions
-//TODO: group together perks in item searches and ignore ornament perks/shaders
+//TODO: group together like perks/traits in item searches
 //TODO: clean up code
-//TODO: add missing data in the about command and other places
 //TODO: add an admin list for the bot for live maitenance tasks
 //TODO: clean up github page
+//TODO: integrate py code for paginating
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -516,19 +515,12 @@ function itemSearch(channelIDArg, itemQuery) {
     var elementIconLocation;
     var itemJSON;
     return queryItemsByName(itemQuery)
+        //TODO: confirm that the item isn't an emote or anything else until those are handled
         .then((queryData) => {
             if (queryData[0] == null) {                             // Make sure the DB carries a response
                 throw new Error(`I couldn't find an item that contains ${itemQuery}`);
             } else if (queryData.length > 1) {
-                let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                errMessageEmbed.description = `Pagination isn't ready yet, try searching more specifically for the item`;
-                errMessageEmbed.title = 'Error:';
-                return bot.sendMessage({
-                    to: channelIDArg,
-                    message: '',
-                    embed: errMessageEmbed,
-                    typing: true
-                });
+                throw new Error(`Pagination is not yet ready, try searching more specifically`);
             } else {
                 itemJSON = JSON.parse(queryData[0].json);
                 console.log(itemJSON);                              // Debugging
@@ -602,8 +594,7 @@ function itemSearch(channelIDArg, itemQuery) {
             }
         })
         .then(() => {
-            console.log('Done.')
-            //TODO: paginate the results here
+            console.log('Done.');
             let itemEmbed = new dsTemplates.baseDiscordEmbed;
             itemEmbed.color = itemColor;
             itemEmbed.description = `_${itemJSON.displayProperties.description}_ `;
@@ -643,6 +634,7 @@ function sendErrMessage(channelIDArg, err) {
     var messageEmbed = new dsTemplates.baseDiscordEmbed;
     messageEmbed.description = err.toString();
     messageEmbed.title = 'Error:';
+    //add 'if you think this is a bug, contact me' to footnotes section
     bot.sendMessage({
         to: channelIDArg,
         message: '',
