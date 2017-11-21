@@ -542,9 +542,10 @@ function itemSearch(channelIDArg, itemQuery) {
                 var promiseTail = Promise.resolve();
                 itemJSON.sockets.socketEntries.forEach((entry, index) => {
                     //perks are very strange -- they need a lot of work still...
-                    console.log(entry)
+                    console.log(entry.reusablePlugItems)
                     entry.reusablePlugItems.forEach((item, itemIndex) => {
                         // TODO: Order perks by the same type (sights, etc.)
+                        console.log()
                         var perksTemp = [];
                         promiseTail = promiseTail.then(() => {
                             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.plugItemHash}%' ORDER BY json DESC LIMIT 0, 50000;`)
