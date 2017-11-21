@@ -541,12 +541,12 @@ function itemSearch(channelIDArg, itemQuery) {
                 // Get non-item type specific data (socket stuff)
                 var promiseTail = Promise.resolve();
                 itemJSON.sockets.socketEntries.forEach((entry, index) => {
+                    var perksTemp = [];
                     //perks are very strange -- they need a lot of work still...
                     console.log(entry.reusablePlugItems)
                     entry.reusablePlugItems.forEach((item, itemIndex) => {
                         // TODO: Order perks by the same type (sights, etc.)
                         console.log()
-                        var perksTemp = [];
                         promiseTail = promiseTail.then(() => {
                             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyInventoryItemDefinition WHERE json LIKE '%"hash":${item.plugItemHash}%' ORDER BY json DESC LIMIT 0, 50000;`)
                                 .then((socketQueryData) => {
@@ -554,6 +554,10 @@ function itemSearch(channelIDArg, itemQuery) {
                                         let socketData = JSON.parse(socketQueryData[0].json)
                                         if (socketData.plug.plugCategoryIdentifier == 'shader') {
                                             return;                 // Skip shader slots
+                                        } else if (socketData.itemTypeDisplayName == 'Weapon Ornament') {
+                                            return;                 // Skip non-default ornaments
+                                        } else if (socketData.plug.plugCategoryIdentifier == 'exotic_all_skins') {
+                                            return;                 // Skip default ornaments
                                         }
                                         console.log(socketData);
                                         perks.push(
@@ -566,7 +570,9 @@ function itemSearch(channelIDArg, itemQuery) {
                                     }
                                 })
                         })
+
                     })
+
                 })
                 // Determine if weapon or armor by checking damage type, 0 being armor
                 if (itemJSON.defaultDamageType == 0) {              // Armor type
