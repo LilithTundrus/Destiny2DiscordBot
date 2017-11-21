@@ -10,10 +10,10 @@ var Traveler = require('the-traveler').default;                     // Destiny 2
 var chalk = require('chalk');                                       // Console.logging colors!
 // traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
-const Manifest = require('the-traveler/build/Manifest').default;
-var profilesType = Enums.ComponentType.Profiles;                    // Access the-traveler enums
+const Manifest = require('the-traveler/build/Manifest').default;    // Used for creating  D2 DB manifests
+const profilesType = Enums.ComponentType.Profiles;                  // Access the-traveler enums
 //Built-in requires
-var fs = require('fs');
+var fs = require('fs');                                             // Used for logging in the context of this bot
 var os = require('os');                                             // OS info lib built into node for debugging
 // Before the bot starts up, set up the-traveler and a D2 Manifest to query for data
 const traveler = new Traveler({                                     // Must be defined before destinyManifest can be defined
@@ -49,6 +49,10 @@ Notes:
 //TODO: add xur locations
 //TODO: error handle all exceptions
 //TODO: group together perks in item searches and ignore ornament perks/shaders
+//TODO: clean up code
+//TODO: add missing data in the about command and other places
+//TODO: add an admin list for the bot for live maitenance tasks
+//TODO: clean up github page
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -62,7 +66,7 @@ bot.on('ready', function (evt) {                                    // Do some l
     refreshManifest();                                              // Refresh the Destiny manifest data    
     bot.setPresence({                                               // Make the bot 'play' soemthing
         idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
-        game: { name: 'Getting Caballed' }
+        game: { name: 'Destiny 2' }
     });
 });
 
@@ -143,24 +147,19 @@ function about(channelIDArg) {                                      // Send the 
     aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
     aboutEmbed.color = 3447003;
     aboutEmbed.title = `${bot.username} ${ver}`;
-    aboutEmbed.description = 'Info about this bot!\n--Invite this bot to your server--'
-        + '\nThe Traveler is a bot writtin in Node (ES6) to display useful info about the Destiny 2 from the D2 API endpoints';
+    aboutEmbed.description = `Info about this bot!\n[Invite this bot to your server](${config.discordInviteLink})`
+        + '\n\nThe Traveler is a bot writtin in Node (ES6) to display useful info about the Destiny 2 from the D2 API endpoints';
     aboutEmbed.fields =
         [
             {
                 name: 'Process Info',
-                //CPU load average only works on unix/linux host 
+                // CPU load average only works on unix/linux host 
                 value: `RAM Total: ${Math.round(os.totalmem() / 1024 / 1024)}MB\nRAM free: ${Math.round(os.freemem() / 1024 / 1024)}MB\nIn use by Bot: ${Math.round(process.memoryUsage().heapTotal / 1024 / 1024)}MB\nCPU load: ${os.loadavg()[0]}%^`,
                 inline: true
             },
             {
                 name: 'Uptime',
                 value: formatTime(process.uptime()),
-                inline: true
-            },
-            {
-                name: 'PH',
-                value: 'PH',
                 inline: true
             },
         ];
@@ -680,7 +679,7 @@ function searchForDestinyPlayerPC(playerArg) {
  * @returns {Promise}
  */
 function createNewManifest() {
-    var promiseTail = Promise.resolve();
+    var promiseTail = Promise.resolve();                            // Used to encapsulate all promise returns to called instance
     promiseTail = promiseTail
         .then(() => {
             return traveler.getDestinyManifest()
@@ -754,8 +753,7 @@ function getMostRecentPlayedCharID(destinyMembershipID) {
             var latestPlayedDate = getLatestDate(dateComparisonArray);
             characterDataArray.forEach((entry, index) => {
                 if (entry.dateLastPlayed == latestPlayedDate) {
-                    // Assign the character data to the entry that contains the most recently played date
-                    mostRecentCharacterID = entry.characterId;
+                    mostRecentCharacterID = entry.characterId;      // Assign the character data to the entry that contains the most recently played date
                 } else {
                     return;                                         // Do nothing
                 }
@@ -820,8 +818,7 @@ function queryItemsByName(nameQuery) {
 
 // #region miscFunctions
 
-//format process.uptime (or other UNIX long dates (probably))
-function formatTime(seconds) {
+function formatTime(seconds) {                                      // Format process.uptime (or other UNIX long dates (probably))
     function pad(s) {
         return (s < 10 ? '0' : '') + s;
     }
