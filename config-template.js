@@ -1,6 +1,8 @@
 //token for discord bot access
 exports.discordToken = 'YOUR_DISCORD_TOKEN_HERE';
 exports.discordAdmin = 'ADMIN_DISCORD_ID';
+exports.discordInviteLink = 'https://discordapp.com/oauth2/authorize?&client_id=YOUR_ID_HERE&scope=bot&permissions=0';
+
 
 //bungie API token/info
 exports.destiny2Token = 'YOUR_D2_APP_TOKEN_HERE';
