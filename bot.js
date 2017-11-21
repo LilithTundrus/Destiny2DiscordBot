@@ -8,7 +8,6 @@ const constants = require('./lib/constants.js')
 var Discord = require('discord.io');                                // Discord API wrapper
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
 var chalk = require('chalk');                                       // Console.logging colors!
-var emoji = require('node-emoji');
 // traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;
