@@ -72,7 +72,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
         var args = message.substring(1).split(' ');
         var cmd = args[0];
         // Log any messages sent to the bot to the console and to file for debugging
-        fs.appendFileSync('discordMessagelog.log', `${user} sent: ${message} at ${Date.now()}`);
+        fs.appendFileSync('discordMessagelog.log', `\n${user} sent: ${message} at ${Date.now()}`);
         console.log(`${user} sent: ${message} at ${new Date().toISOString()}`);
         args = args.splice(1);
         switch (cmd) {                                              // Bot needs to know if it will execute a command
