@@ -8,6 +8,14 @@ Display information about the bot
 
 Get the weekly Nightfall info
 
+**%searchplayer <BattleTag#1234>**
+
+Search for a player by their Battle Tag and see if they have a Destiny 2 profile
+
 **%profile <BattleTag#1234>**
 
 Get a destiny player's stats (PC only for now) by BattleTag (required)
+
+**%item <item name>**
+
+Get info about a weapon or set of armor (paging through multiple results not yet ready)
