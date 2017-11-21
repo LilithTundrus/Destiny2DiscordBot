@@ -29,7 +29,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 //other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0025';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0026';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -43,15 +43,14 @@ Notes:
 TODO: figure out proper way to do Oauth (look at spirit's code)
 TODO: move miscFunctions to /lib
 TODO: parse more data from the extra component endpoints in enum ComponentType
-TODO: clean up code
 TODO: set up bot DB for player/clan rosters
-TODO: find a way to keep the manifest fresh
 TODO: create a hash decoder function for the DB (promise based)
 TODO: move help commands to a JSON array file
 TODO: allow for help <command> to get more info on a command
 TODO: reduce code by writing it smarter
 TODO: add xur locations
 TODO: error handle all exceptions
+TODO: group together perks in item searches and ignore ornament perks/shaders
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -608,10 +607,9 @@ function itemSearch(channelIDArg, itemQuery) {
         })
         .then(() => {
             console.log('Done.')
-            //paginate the results here
+            //TODO: paginate the results here
             let itemEmbed = new dsTemplates.baseDiscordEmbed;
             itemEmbed.color = itemColor;
-            //itemEmbed.title = `${itemJSON.displayProperties.name}`;
             itemEmbed.description = `_${itemJSON.displayProperties.description}_ `;
             itemEmbed.author = { name: itemJSON.displayProperties.name, icon_url: elementIconLocation };
             let statsEmbed = stats.map(function (elem) {
