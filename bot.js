@@ -28,7 +28,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 // Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0026';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0030';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -39,17 +39,17 @@ Notes:
 - For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!
 - Trying to render characters is too hard (for now)
 
-TODO: figure out proper way to do Oauth (look at spirit's code)
-TODO: move miscFunctions to /lib
-TODO: parse more data from the extra component endpoints in enum ComponentType
-TODO: set up bot DB for player/clan rosters
-TODO: create a hash decoder function for the DB (promise based)
-TODO: move help commands to a JSON array file
-TODO: allow for help <command> to get more info on a command
-TODO: reduce code by writing it smarter
-TODO: add xur locations
-TODO: error handle all exceptions
-TODO: group together perks in item searches and ignore ornament perks/shaders
+//TODO: figure out proper way to do Oauth (look at spirit's code)
+//TODO: move miscFunctions to /lib
+//TODO: parse more data from the extra component endpoints in enum ComponentType
+//TODO: set up bot DB for player/clan rosters
+//TODO: create a hash decoder function for the DB (promise based)
+//TODO: move help commands to a JSON array file
+//TODO: allow for help <command> to get more info on a command
+//TODO: reduce code by writing it smarter
+//TODO: add xur locations
+//TODO: error handle all exceptions
+//TODO: group together perks in item searches and ignore ornament perks/shaders
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -139,7 +139,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
 });
 
 // #region discordMessageFunctions
-function about(channelIDArg) {                                       // Send the bot about message
+function about(channelIDArg) {                                      // Send the bot about message
     let aboutEmbed = new dsTemplates.baseDiscordEmbed;               // Set up embed message
     aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
     aboutEmbed.color = 3447003;
@@ -541,8 +541,6 @@ function itemSearch(channelIDArg, itemQuery) {
                 // Get non-item type specific data (socket stuff)
                 var promiseTail = Promise.resolve();
                 itemJSON.sockets.socketEntries.forEach((entry, index) => {
-                    var perksTemp = [];
-                    //perks are very strange -- they need a lot of work still...
                     console.log(entry.reusablePlugItems)
                     entry.reusablePlugItems.forEach((item, itemIndex) => {
                         // TODO: Order perks by the same type (sights, etc.)
