@@ -1,7 +1,7 @@
 'use strict';                                                       // Allow less 'bad' code
 // Custom requires/libs
 const config = require('./config.js');                              // Conifg/auth data
-const dsTemplates = require('./dsTemplates.js');                    // Templates for Discord messages
+const dsTemplates = require('./lib/dsTemplates.js');                // Templates for Discord messages
 const enumHelper = require('./lib/enumsAbstractor.js');             // Helper to get string values of the-traveler enums (common ones anyway)
 const constants = require('./lib/constants.js')
 // npm packages
@@ -24,10 +24,9 @@ const traveler = new Traveler({                                     // Must be d
 });
 // Init the Destiny 2 DB to call for hash IDs on items/basically anything hased
 var destinyManifest;
-
-//refresh the manifest every 3 hours
+// Refresh the manifest every 3 hours
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
-//other declarations
+// Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
 const ver = '0.0.0026';                                             // Arbitrary version for knowing which bot version is deployed
 
@@ -190,7 +189,6 @@ function help(channelIDArg) {                                       // Help mess
 
 /**
  * Search for a player using the D2 API and send a Discord message based on the results
- * 
  * @param {string|number} channelIDArg 
  * @param {string} playerName 
  * @returns {Promise}
@@ -273,7 +271,6 @@ function searchplayer(channelIDArg, playerName) {
  * TODO: get light level of each item based on their instance hash
  * 
  * TODO: get the damage type of weapons (less jankily)
- * 
  * @param {string|number} channelIDArg 
  * @param {string} playerName 
  * @returns {Promise}
@@ -663,7 +660,6 @@ function sendErrMessage(channelIDArg, err) {
 
 /**
  * search for a Battle.net (PC) player name and return the Destiny 2 API Account/Player data.
- * 
  * @param {string} playerArg 
  * @returns {Promise}
  */
@@ -681,7 +677,6 @@ function searchForDestinyPlayerPC(playerArg) {
 
 /**
  * Create an instanced DB of the D2 STANDARD Manifest to query
- * 
  * @returns {Promise}
  */
 function createNewManifest() {
@@ -704,7 +699,6 @@ function createNewManifest() {
 
 /**
  * Send a query to the D2 Manifest (SQLite syntax)
- * 
  * @param {string} query 
  * @returns {JSON | null}
  */
@@ -718,6 +712,11 @@ function queryDestinyManifest(query) {
         });
 }
 
+/**
+ * Get a player's profile based on their ID
+ * @param {number | string} destinyMembershipID 
+ * @returns {JSON}
+ */
 function getPlayerProfile(destinyMembershipID) {
     return traveler.getProfile('4', destinyMembershipID, { components: [200, 201] })
         .then((profileData) => {
@@ -736,7 +735,6 @@ function getPlayerProfile(destinyMembershipID) {
  * TODO: make this more efficient 
  * 
  * Abstract sorting through player data and determining the most recently played character
- * 
  * @param {number | string} destinyMembershipID 
  * @returns {number}
  */
@@ -772,8 +770,7 @@ function getMostRecentPlayedCharID(destinyMembershipID) {
 /**
  * get D2 Character data in an aggregated source
  * 
- * Update the components arg to the traveler to get more/less information
- * 
+ * TODO: Update the components arg to the traveler to get more/less information
  * @param {any} destinyMembershipID 
  * @param {any} characterID 
  * @returns {Promise & JSON}
@@ -787,7 +784,6 @@ function getCharacterDataPC(destinyMembershipID, characterID) {
 
 /**
  * Get a Destiny 2 milestone data by its hash
- * 
  * @param {number | string} hashArg 
  * @returns {Promise & JSON}
  */
@@ -895,3 +891,5 @@ function timeDifference(current, previous) {
         return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
     }
 }
+
+// #endregion
