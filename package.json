@@ -1,6 +1,6 @@
 {
   "name": "discord-destiny2-bot",
-  "version": "0.0.1",
+  "version": "0.0.0030",
   "description": "A Discord bot using the npm package: the-traveler",
   "main": "bot.js",
   "scripts": {
@@ -25,7 +25,6 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "discord.io": "^2.5.3",
-    "node-emoji": "^1.8.1",
     "sqlite3": "^3.1.13",
     "the-traveler": "^0.5.0"
   }
