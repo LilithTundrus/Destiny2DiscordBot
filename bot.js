@@ -562,7 +562,7 @@ function itemSearch(channelIDArg, itemQuery) {
                                         console.log(socketData);
                                         perks.push(
                                             {
-                                                name: socketData.displayProperties.name,
+                                                name: socketData.itemTypeDisplayName + ': ' + socketData.displayProperties.name,
                                                 description: socketData.displayProperties.description
                                             })
                                     } else {
