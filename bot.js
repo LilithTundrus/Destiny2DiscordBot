@@ -524,16 +524,7 @@ function itemSearch(channelIDArg, itemQuery) {
     return queryItemsByName(itemQuery)
         .then((queryData) => {
             if (queryData[0] == null) {                             // Make sure the DB carries a response
-                let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                errMessageEmbed.description = `I couldn't find an item that contains ${itemQuery}`;
-                errMessageEmbed.title = 'Error:';
-                return bot.sendMessage({
-                    to: channelIDArg,
-                    message: '',
-                    embed: errMessageEmbed,
-                    typing: true
-                });
-                throw new Error('No query returned from the DB')
+                throw new Error(`I couldn't find an item that contains ${itemQuery}`);
             } else if (queryData.length > 1) {
                 let errMessageEmbed = new dsTemplates.baseDiscordEmbed;
                 errMessageEmbed.description = `Pagination isn't ready yet, try searching more specifically for the item`;
@@ -575,7 +566,6 @@ function itemSearch(channelIDArg, itemQuery) {
                                                 name: socketData.displayProperties.name,
                                                 description: socketData.displayProperties.description
                                             })
-
                                     } else {
                                         console.log('NO QUERY DATA RETURNED... HANDLE THIS!!!')
                                     }
@@ -653,12 +643,11 @@ function itemSearch(channelIDArg, itemQuery) {
         .catch((err) => {
             return sendErrMessage(channelIDArg, err)
         })
-
 }
 
 function sendErrMessage(channelIDArg, err) {
     var messageEmbed = new dsTemplates.baseDiscordEmbed;
-    messageEmbed.description = 'I seem to be having an unknown problem. Try again later.\n\nIf the problem persits, please contact the developer at PLACEHOLDER';
+    messageEmbed.description = err.toString();
     messageEmbed.title = 'Error:';
     bot.sendMessage({
         to: channelIDArg,
