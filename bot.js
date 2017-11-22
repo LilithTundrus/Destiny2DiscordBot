@@ -174,8 +174,7 @@ function help(channelIDArg) {                                       // Help mess
     let helpMsg = fs.readFileSync('./helpNotes.txt');
     var helpEmbed = new dsTemplates.baseDiscordEmbed;               // Set up embed message
     helpEmbed.title = '**Available Commands**';
-    let helpString = 'For additional help go [here](https://github.com/LilithTundrus/Destiny2DiscordBot)\n\n';
-    helpEmbed.description = helpString + helpMsg.toString();        // Shove the Discord formatted string and the help file contents together
+    helpEmbed.description = helpMsg.toString();                     // Discord needs a string
     bot.sendMessage({
         to: channelIDArg,
         message: '',

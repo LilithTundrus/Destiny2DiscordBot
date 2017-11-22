@@ -1,3 +1,6 @@
+For additional help go [here](https://github.com/LilithTundrus/Destiny2DiscordBot)
+
+
 Note: Don't Include brackets in the commands!
 
 **%about**
