@@ -172,10 +172,10 @@ function about(channelIDArg) {                                      // Send the 
 
 function help(channelIDArg) {                                       // Help message as a function due to it needing to be repeatedly called
     let helpMsg = fs.readFileSync('./helpNotes.txt');
-    var helpEmbed = new dsTemplates.baseDiscordEmbed;                   // Set up embed message
+    var helpEmbed = new dsTemplates.baseDiscordEmbed;               // Set up embed message
     helpEmbed.title = '**Available Commands**';
-    let helpString = 'For additional help go to https://github.com/LilithTundrus/Destiny2DiscordBot\n\n';
-    helpEmbed.description = helpString + helpMsg.toString();
+    let helpString = 'For additional help go [here](https://github.com/LilithTundrus/Destiny2DiscordBot)\n\n';
+    helpEmbed.description = helpString + helpMsg.toString();        // Shove the Discord formatted string and the help file contents together
     bot.sendMessage({
         to: channelIDArg,
         message: '',
