@@ -33,12 +33,12 @@ const ver = '0.0.0032';                                             // Arbitrary
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
 - Current design goal is PC ONLY
-- Do everything that doesn't involve the DB first!
 - Region comments should work in atom/VSCode
 - For the D2 DB you NEED to use the HASHES of the item to find it not the row ID!!!
 - Trying to render characters is too hard (for now)
 
-//TODO: figure out proper way to do Oauth (look at spirit's code)
+//TODO: figure out proper way to do Oauth (look at spirit's code) 
+//TODO: create a !stats pve and !stats pvp command
 //TODO: move miscFunctions to /lib
 //TODO: parse more data from the extra component endpoints in enum ComponentType
 //TODO: set up bot DB for player/clan rosters
