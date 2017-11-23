@@ -616,11 +616,24 @@ function getXurData(channelIDArg) {
     //for now just calculate his time-until-return
     return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyVendorDefinition WHERE json LIKE '%xur%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
         .then((queryData) => {
-            return bot.sendMessage({
-                to: channelIDArg,
-                message: 'XUUUUUUUUUUUUUUUUUUR',
-                typing: true
-            });
+            // Check if the DB returned a response
+            if (queryData[0] == null) {
+                let errDescription = `I'm encountering an unknown error when trying to get Xur's data. Tray again later.`
+                return sendErrMessage(channelIDArg, errDescription);
+            } else {
+                //Work with the data
+                let xurData = JSON.parse(queryData[0].json);
+                console.log(xurData);
+                // Get the 2 date offsets
+                console.log(xurData.resetOffsetMinutes);
+                console.log(xurData.resetIntervalMinutes);
+                return bot.sendMessage({
+                    to: channelIDArg,
+                    message: 'XUUUUUUUUUUUUUUUUUUR',
+                    typing: true
+                });
+            }
+
         })
 }
 
