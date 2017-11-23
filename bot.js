@@ -103,7 +103,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 }
                 break;
             case 'nightfall':                                       // Get the Nightfall data
-                nightfalls(channelID);
+                return nightfalls(channelID);
                 break;
             case 'item':
                 if (message.length < 9 || message.trim().length < 9) {
@@ -115,16 +115,7 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 }
                 break;
             case 'xur':
-                var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                errMessageEmbed.description = `AAAAAAAAAAA`;
-                errMessageEmbed.title = 'Error:';
-
-                bot.sendMessage({
-                    to: channelID,
-                    message: '',
-                    embed: errMessageEmbed,
-                    typing: true
-                });
+                return getXurData(channelID);
                 break;
             // Just add any case commands here
         }
@@ -617,6 +608,19 @@ function itemSearch(channelIDArg, itemQuery) {
         })
         .catch((err) => {
             return sendErrMessage(channelIDArg, err)
+        })
+}
+
+function getXurData(channelIDArg) {
+    //query DB for Xur data
+    //for now just calculate his time-until-return
+    return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyVendorDefinition WHERE json LIKE '%xur%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
+        .then((queryData) => {
+            return bot.sendMessage({
+                to: channelIDArg,
+                message: 'XUUUUUUUUUUUUUUUUUUR',
+                typing: true
+            });
         })
 }
 
