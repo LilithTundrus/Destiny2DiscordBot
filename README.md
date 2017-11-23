@@ -11,3 +11,4 @@ Current working features are as follows:
 * Profile - Get a player's most recently played D2 character by their Battle Tag
 * Item - Get a D2 weapon/armor item by name (PAGINATION NOT YET WORKING!!!)
 * Nightfall - Get the weekly Nightfall info (sometimes is classified)
+* Xur - Get the wherabouts of the mysterious vendor, Xur and what he has for sale (IN ALPHA, some features not available)
