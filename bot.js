@@ -39,20 +39,21 @@ Notes:
 
 //TODO: figure out proper way to do Oauth (look at spirit's code) 
 //TODO: create a !stats pve and !stats pvp command
-//TODO: move miscFunctions to /lib
 //TODO: parse more data from the extra component endpoints in enum ComponentType
 //TODO: set up bot DB for player/clan rosters
 //TODO: create a hash decoder function for the DB (promise based)
 //TODO: move help commands to a JSON array file
 //TODO: allow for help <command> to get more info on a command
-//TODO: add xur locations
 //TODO: error handle all exceptions
 //TODO: group together like perks/traits in item searches
-//TODO: clean up code
 //TODO: add an admin list for the bot for live maitenance tasks
 //TODO: clean up github page
 //TODO: integrate py code for paginating
 //TODO: use oauth for a 'my milestones' command
+//TODO: Make sure Xur stuff is working
+//TODO: add a way for player to add nicknames for their battletags (easier searching)
+//TODO: allow players to register with their both for the profile command to give them
+their profile by default
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
