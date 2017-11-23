@@ -86,15 +86,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'searchplayer':                                    // Mostly for debugging
                 if (message.length < 14 || message.trim().length < 14) {
-                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                    errMessageEmbed.description = `Please give a player tag to search for`;
-                    errMessageEmbed.title = 'Error:';
-                    bot.sendMessage({
-                        to: channelID,
-                        message: '',
-                        embed: errMessageEmbed,
-                        typing: true
-                    });
+                    let errDescription = `Please give a player tag to search for`;
+                    return sendErrMessage(channelID, errDescription);
                 } else {
                     let playerName = message.substring(14);
                     return searchplayer(channelID, playerName);
@@ -102,15 +95,8 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'profile':                                         // Use level 1 D2 API data to get a player's profile
                 if (message.length < 9 || message.trim().length < 9) {
-                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                    errMessageEmbed.description = `Please provide a player name to search for`;
-                    errMessageEmbed.title = 'Error:';
-                    bot.sendMessage({
-                        to: channelID,
-                        message: '',
-                        embed: errMessageEmbed,
-                        typing: true
-                    });
+                    let errDescription = `Please provide a player name to search for`;
+                    return sendErrMessage(channelID, errDescription);
                 } else {
                     let playerName = message.substring(9);
                     return getProfile(channelID, playerName);
@@ -121,19 +107,24 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'item':
                 if (message.length < 9 || message.trim().length < 9) {
-                    var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
-                    errMessageEmbed.description = `Please provide an argument at least 3 characters long`;
-                    errMessageEmbed.title = 'Error:';
-                    bot.sendMessage({
-                        to: channelID,
-                        message: '',
-                        embed: errMessageEmbed,
-                        typing: true
-                    });
+                    let errDescription = `Please provide an argument at least 3 characters long`;
+                    sendErrMessage(channelID, errDescription)
                 } else {
                     let itemQuery = message.substring(6);
                     itemSearch(channelID, itemQuery);
                 }
+                break;
+            case 'xur':
+                var errMessageEmbed = new dsTemplates.baseDiscordEmbed;
+                errMessageEmbed.description = `AAAAAAAAAAA`;
+                errMessageEmbed.title = 'Error:';
+
+                bot.sendMessage({
+                    to: channelID,
+                    message: '',
+                    embed: errMessageEmbed,
+                    typing: true
+                });
                 break;
             // Just add any case commands here
         }
