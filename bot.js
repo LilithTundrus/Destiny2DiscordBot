@@ -27,7 +27,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 // Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0032';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.0033';                                             // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -52,6 +52,7 @@ Notes:
 //TODO: add an admin list for the bot for live maitenance tasks
 //TODO: clean up github page
 //TODO: integrate py code for paginating
+//TODO: use oauth for a 'my milestones' command
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -624,12 +625,26 @@ function getXurData(channelIDArg) {
                 //Work with the data
                 let xurData = JSON.parse(queryData[0].json);
                 console.log(xurData);
-                // Get the 2 date offsets
-                console.log(xurData.resetOffsetMinutes);
-                console.log(xurData.resetIntervalMinutes);
+                // Get the reset offset and the reset interval
+                // Set the offset to positive
+                let xurResetOffsetMinutes = xurData.resetOffsetMinutes *= -1;
+                let xurResetIntervalMinutes = xurData.resetIntervalMinutes;
+                let xurVisitHrs = convertMinsToHrsMins(xurResetOffsetMinutes - xurResetIntervalMinutes)
+                // Create the message embed here
+                var xurDataEmbed = new dsTemplates.baseDiscordEmbed;
+                xurDataEmbed.title = `${xurData.displayProperties.name}: ${xurData.displayProperties.subtitle}`;
+                xurDataEmbed.description = `_${xurData.displayProperties.description}_`;
+                xurDataEmbed.fields = [
+                    {
+                        name: 'Time until next visit:',
+                        value: `${xurVisitHrs}`
+
+                    }
+                ]
                 return bot.sendMessage({
                     to: channelIDArg,
-                    message: 'XUUUUUUUUUUUUUUUUUUR',
+                    message: '',
+                    embed: xurDataEmbed,
                     typing: true
                 });
             }
