@@ -27,7 +27,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 // Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.0033';                                             // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.133';                                              // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -613,7 +613,6 @@ function itemSearch(channelIDArg, itemQuery) {
 }
 
 function getXurData(channelIDArg) {
-    //query DB for Xur data
     //for now just calculate his time-until-return
     return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyVendorDefinition WHERE json LIKE '%xur%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
         .then((queryData) => {
@@ -649,6 +648,9 @@ function getXurData(channelIDArg) {
                 });
             }
 
+        })
+        .catch((err) => {
+            return sendErrMessage(channelIDArg, err)
         })
 }
 
