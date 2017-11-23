@@ -241,6 +241,7 @@ function searchplayer(channelIDArg, playerName) {
         });
 }
 
+//NEEDS WORK
 /**
  * Get a profile of the most recent character played by a battle.net accunt if it exists
  * (abstracts a lot of related but separate API and DB calls)
@@ -346,17 +347,13 @@ function getProfile(channelIDArg, playerName) {
                                         inline: true
                                     },
                                 ];
-                                playerProfileEmbed.thumbnail = {
-                                    url: playerEmblemURL
-                                };
+                                playerProfileEmbed.thumbnail = { url: playerEmblemURL };
                                 bot.sendMessage({
                                     to: channelIDArg,
                                     message: '',
                                     embed: playerProfileEmbed,
                                     typing: true
                                 });
-
-                                console.log('Done.')
                             })
                     })
                     .catch((err) => {
@@ -393,7 +390,6 @@ function nightfalls(channelIDArg) {
                 .then((queryData) => {
                     // This query contains the nightfall description and name
                     let nightfallQueryData = JSON.parse(queryData[0].json);
-                    console.log(nightfallQueryData);
                     nightfallEmbedTitle = nightfallQueryData.displayProperties.name;
                     nightfallEmbedDescription = nightfallQueryData.displayProperties.description;
                     nightfallEmbedIcon = destiny2BaseURL + nightfallQueryData.displayProperties.icon;
@@ -401,24 +397,19 @@ function nightfalls(channelIDArg) {
                     nightfallQueryData.challenges.forEach((challenge, index) => {
                         nightfallChallengesEncoded.push(challenge.objectiveHash);
                     })
-                    console.log(nightfallChallengesEncoded);
                     // Decode the challenges
                     var promiseTail = Promise.resolve();
                     nightfallChallengesEncoded.forEach((challengeHash, index) => {
                         promiseTail = promiseTail.then(() => {
                             return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyObjectiveDefinition WHERE json LIKE '%${challengeHash}%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
                                 .then((queryData) => {
-                                    console.log(queryData);
                                     let challengeJSON = JSON.parse(queryData[0].json);
                                     var challenges = {};
                                     challenges.name = challengeJSON.displayProperties.name;
                                     challenges.description = challengeJSON.displayProperties.description;
                                     nightfallChallengesDecoded.push(challenges);
                                 })
-
-                            console.log(nightfallData.availableQuests[0].activity.modifierHashes)
-                            //Decode the modifiers (their hashes are right in the nightfall milestone)
-
+                            // Decode the modifiers (their hashes are right in the nightfall milestone)
                         })
                     })
                     // Modifiers are already in the base nightfallData
@@ -472,9 +463,7 @@ function nightfalls(channelIDArg) {
                             inline: false
                         },
                     ]
-                    nightfallEmbed.thumbnail = {
-                        url: nightfallEmbedIcon
-                    };
+                    nightfallEmbed.thumbnail = { url: nightfallEmbedIcon };
                     return bot.sendMessage({
                         to: channelIDArg,
                         message: '',
@@ -592,9 +581,7 @@ function itemSearch(channelIDArg, itemQuery) {
                     inline: true
                 },
             ];
-            itemEmbed.thumbnail = {
-                url: itemIconURL
-            };
+            itemEmbed.thumbnail = { url: itemIconURL };
             perks.forEach((entry, index) => {
                 itemEmbed.fields.push({
                     name: entry.name,
