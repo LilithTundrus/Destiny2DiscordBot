@@ -27,7 +27,7 @@ var destinyManifest;
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 // Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.133';                                              // Arbitrary version for knowing which bot version is deployed
+const ver = '0.0.137';                                              // Arbitrary version for knowing which bot version is deployed
 
 /*
 Notes:
@@ -128,7 +128,7 @@ function about(channelIDArg) {                                      // Send the 
     let aboutEmbed = new dsTemplates.baseDiscordEmbed;               // Set up embed message
     aboutEmbed.author = { name: bot.username, icon_url: config.travelerIcon };
     aboutEmbed.color = 3447003;
-    aboutEmbed.title = `${bot.username} ${ver}`;
+    aboutEmbed.title = `${bot.username} v${ver}`;
     aboutEmbed.description = `Info about this bot!\n[Invite this bot to your server](${config.discordInviteLink})`
         + '\n\nThe Traveler is a bot writtin in Node (ES6) to display useful info about the Destiny 2 from the D2 API endpoints';
     aboutEmbed.fields =
@@ -616,20 +616,20 @@ function getXurData(channelIDArg) {
     //for now just calculate his time-until-return
     return queryDestinyManifest(`SELECT _rowid_,* FROM DestinyVendorDefinition WHERE json LIKE '%xur%' ORDER BY _rowid_ ASC LIMIT 0, 50000;`)
         .then((queryData) => {
-            // Check if the DB returned a response
-            if (queryData[0] == null) {
+            if (queryData[0] == null) {                                         // Check if the DB returned a response
                 let errDescription = `I'm encountering an unknown error when trying to get Xur's data. Tray again later.`
                 return sendErrMessage(channelIDArg, errDescription);
             } else {
                 //Work with the data
                 let xurData = JSON.parse(queryData[0].json);
-                console.log(xurData);
+                let xurIcon = config.destiny2BaseURL + xurData.displayProperties.icon;
+                let xurBannerImage = config.destiny2BaseURL + xurData.displayProperties.largeIcon;
                 // Get the reset offset and the reset interval
                 // Set the offset to positive
                 let xurResetOffsetMinutes = xurData.resetOffsetMinutes *= -1;
                 let xurResetIntervalMinutes = xurData.resetIntervalMinutes;
                 let xurVisitHrs = convertMinsToHrsMins(xurResetOffsetMinutes - xurResetIntervalMinutes)
-                // Create the message embed here
+                // Create the message embed
                 var xurDataEmbed = new dsTemplates.baseDiscordEmbed;
                 xurDataEmbed.title = `${xurData.displayProperties.name}: ${xurData.displayProperties.subtitle}`;
                 xurDataEmbed.description = `_${xurData.displayProperties.description}_`;
@@ -637,9 +637,10 @@ function getXurData(channelIDArg) {
                     {
                         name: 'Time until next visit:',
                         value: `${xurVisitHrs}`
-
                     }
                 ]
+                xurDataEmbed.thumbnail = { url: xurIcon };
+                xurDataEmbed.image = { url: xurBannerImage }
                 return bot.sendMessage({
                     to: channelIDArg,
                     message: '',
@@ -647,7 +648,6 @@ function getXurData(channelIDArg) {
                     typing: true
                 });
             }
-
         })
         .catch((err) => {
             return sendErrMessage(channelIDArg, err)
