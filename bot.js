@@ -61,17 +61,6 @@ var bot = new Discord.Client({                                      // Initializ
     autoReconnect: true,
 });
 
-bot.on('disconnect', function (evt) {
-    console.log(`Bot DISCONNECTED at ${new Date().toISOString()}`);
-    console.log('Attempting reconnect...');
-    bot.connect();
-    if (bot.connected == true) {
-        console.log('Reconnected to Discord');
-    } else {
-        console.log('Reconnect failed...');
-    }
-})
-
 bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
     console.log('Connected to Discord...');
     console.log(`Logged in as: ${bot.username} - (${bot.id})`);
@@ -81,6 +70,17 @@ bot.on('ready', function (evt) {                                    // Do some l
         idle_since: null,                                           // Set this to Date.now() to make the bot appear as away
         game: { name: 'Destiny 2' }
     });
+});
+
+bot.on('disconnect', function (evt) {
+    console.log(`Bot DISCONNECTED at ${new Date().toISOString()}`);
+    console.log('Attempting reconnect...');
+    bot.connect();
+    if (bot.connected == true) {
+        console.log('Reconnected to Discord');
+    } else {
+        console.log('Reconnect failed...');
+    }
 });
 
 bot.on('message', function (user, userID, channelID, message, evt) {
