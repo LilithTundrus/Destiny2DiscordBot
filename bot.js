@@ -57,8 +57,20 @@ their profile by default
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
-    autorun: true
+    autorun: true,
+    autoReconnect: true,
 });
+
+bot.on('disconnect', function (evt) {
+    console.log(`Bot DISCONNECTED at ${new Date().toISOString()}`);
+    console.log('Attempting reconnect...');
+    bot.connect();
+    if (bot.connected == true) {
+        console.log('Reconnected to Discord');
+    } else {
+        console.log('Reconnect failed...');
+    }
+})
 
 bot.on('ready', function (evt) {                                    // Do some logging and start ensure bot is running
     console.log('Connected to Discord...');
