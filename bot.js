@@ -628,18 +628,13 @@ function getXurData(channelIDArg) {
                 let xurIcon = config.destiny2BaseURL + xurData.displayProperties.icon;
                 let xurBannerImage = config.destiny2BaseURL + xurData.displayProperties.largeIcon;
                 // the DB does not contain Xur reset data,
-                // Xur resets every friday at 5am EST
-                // Xur leaves Tuesday (I think)
-                //let test = Date.parse('next tuesday');
+                // Xur resets every friday at 5am EST Xur leaves Tuesday (I think)
                 let currentDay = new Date().getDayOfWeek();
                 if (currentDay == 'Friday' || currentDay == 'Saturday' || currentDay == 'Sunday' || currentDay == 'Monday') {
-                    xurStatus = 'Xur is here at PLANET::LOCATION[0] until Tuesday at reset time!'
+                    // this is super janky!
+                    xurStatus = `Xur is here at PLANET::LOCATION[0] until Tuesday at reset time!`
                 } else {
-                    let xurReturnDateMinutes = Math.floor(Date.parse('next friday') / 1000 / 60);
-                    let currentDateMinutes = Math.floor(Date.now() / 1000 / 60);
-                    let reamingingTime = xurReturnDateMinutes - currentDateMinutes;
-                    let xurReturnTimestamp = convertMinsToHrsMins(remainingTime);
-                    xurStatus = `Xur will return in ${xurReturnTimestamp}`;
+                    xurStatus = `Xur will return Friday`;
                 }
                 // Create the message embed
                 var xurDataEmbed = new dsTemplates.baseDiscordEmbed;
