@@ -8,7 +8,8 @@ const constants = require('./lib/constants.js')
 var Discord = require('discord.io');                                // Discord API wrapper
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
 var chalk = require('chalk');                                       // Console.logging colors!
-// traveler helpers/classes/enums
+var dates = require('datejs');
+// the-traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;    // Used for creating  D2 DB manifests
 const profilesType = Enums.ComponentType.Profiles;                  // Access the-traveler enums
@@ -621,22 +622,33 @@ function getXurData(channelIDArg) {
                 return sendErrMessage(channelIDArg, errDescription);
             } else {
                 //Work with the data
+                var xurStatus;
                 let xurData = JSON.parse(queryData[0].json);
+                console.log(xurData);
                 let xurIcon = config.destiny2BaseURL + xurData.displayProperties.icon;
                 let xurBannerImage = config.destiny2BaseURL + xurData.displayProperties.largeIcon;
-                // Get the reset offset and the reset interval
-                // Set the offset to positive
-                let xurResetOffsetMinutes = xurData.resetOffsetMinutes *= -1;
-                let xurResetIntervalMinutes = xurData.resetIntervalMinutes;
-                let xurVisitHrs = convertMinsToHrsMins(xurResetOffsetMinutes - xurResetIntervalMinutes)
+                // the DB does not contain Xur reset data,
+                // Xur resets every friday at 5am EST
+                // Xur leaves Tuesday (I think)
+                //let test = Date.parse('next tuesday');
+                let currentDay = new Date().getDayOfWeek();
+                if (currentDay == 'Friday' || currentDay == 'Saturday' || currentDay == 'Sunday' || currentDay == 'Monday') {
+                    xurStatus = 'Xur is here at PLANET::LOCATION[0] until Tuesday at reset time!'
+                } else {
+                    let xurReturnDateMinutes = Math.floor(Date.parse('next friday') / 1000 / 60);
+                    let currentDateMinutes = Math.floor(Date.now() / 1000 / 60);
+                    let reamingingTime = xurReturnDateMinutes - currentDateMinutes;
+                    let xurReturnTimestamp = convertMinsToHrsMins(remainingTime);
+                    xurStatus = `Xur will return in ${xurReturnTimestamp}`;
+                }
                 // Create the message embed
                 var xurDataEmbed = new dsTemplates.baseDiscordEmbed;
                 xurDataEmbed.title = `${xurData.displayProperties.name}: ${xurData.displayProperties.subtitle}`;
                 xurDataEmbed.description = `_${xurData.displayProperties.description}_`;
                 xurDataEmbed.fields = [
                     {
-                        name: 'Time until next visit:',
-                        value: `${xurVisitHrs}`
+                        name: `Xur's wherabouts`,
+                        value: xurStatus
                     }
                 ]
                 xurDataEmbed.thumbnail = { url: xurIcon };
@@ -904,5 +916,9 @@ function timeDifference(current, previous) {
         return 'approximately ' + Math.round(elapsed / msPerYear) + ' years ago';
     }
 }
+
+Date.prototype.getDayOfWeek = function () {
+    return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][this.getDay()];
+};
 
 // #endregion
