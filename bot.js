@@ -12,7 +12,7 @@ var chalk = require('chalk');                                       // Console.l
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;    // Used for creating  D2 DB manifests
 const profilesType = Enums.ComponentType.Profiles;                  // Access the-traveler enums
-//Built-in requires
+// Built-in requires
 var fs = require('fs');                                             // Used for logging in the context of this bot
 var os = require('os');                                             // OS info lib built into node for debugging
 // Before the bot starts up, set up the-traveler and a D2 Manifest to query for data
@@ -47,7 +47,6 @@ Notes:
 //TODO: move help commands to a JSON array file
 //TODO: allow for help <command> to get more info on a command
 //TODO: group together like perks/traits in item searches
-//TODO: add an admin list for the bot for live maitenance tasks
 //TODO: integrate py code for paginating
 //TODO: use oauth for a 'my milestones' command
 //TODO: Make sure Xur stuff is working
@@ -134,6 +133,12 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 return getXurData(channelID);
                 break;
             case 'authmebitch':
+                traveler.refreshToken('').then(oauth => {
+                    // Provide your traveler object with the oauth object. This is later used for making authenticated calls
+                    traveler.oauth = oauth;
+                }).catch(err => {
+                    console.log(err)
+                })
                 bot.sendMessage({
                     to: channelID,
                     message: authUrl,
@@ -280,7 +285,7 @@ function searchplayer(channelIDArg, playerName) {
 function getProfile(channelIDArg, playerName) {
     return searchForDestinyPlayerPC(playerName)                     // Find the player's ID (by name)
         .then((playerData) => {
-            //set up vars to assign with data later
+            // set up vars to assign with data later
             var playerEquipMentArray = [];
             var playerWeaponEnergyTypes = [];
             var playerID;
@@ -501,7 +506,7 @@ function itemSearch(channelIDArg, itemQuery) {
     var elementIconLocation;
     var itemJSON;
     return queryItemsByName(itemQuery)
-        //TODO: confirm that the item isn't an emote or anything else until those are handled
+        // TODO: confirm that the item isn't an emote or anything else until those are handled
         .then((queryData) => {
             if (queryData[0] == null) {                             // Make sure the DB carries a response
                 throw new Error(`I couldn't find an item that contains ${itemQuery}`);
@@ -842,7 +847,7 @@ function queryItemsByName(nameQuery) {
 }
 
 function getVendorByHash(destinyCharacterID, vendorHash) {
-    return traveler.getVendor('4', '4611686018470800544', '2305843009301107371', '2190858386', { components: [200] })
+    return traveler.getVendor('4', '4611686018470800544', '2305843009301107371', '2190858386', { components: [400] })
         .then((data) => {
             console.log(data);
         })
