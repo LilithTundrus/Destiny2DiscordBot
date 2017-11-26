@@ -8,7 +8,6 @@ const constants = require('./lib/constants.js')
 var Discord = require('discord.io');                                // Discord API wrapper
 var Traveler = require('the-traveler').default;                     // Destiny 2 API wrapper
 var chalk = require('chalk');                                       // Console.logging colors!
-var dates = require('datejs');
 // the-traveler helpers/classes/enums
 const Enums = require('the-traveler/build/enums');                  // Get type enums for the-traveler wrapper
 const Manifest = require('the-traveler/build/Manifest').default;    // Used for creating  D2 DB manifests
@@ -20,16 +19,18 @@ var os = require('os');                                             // OS info l
 const traveler = new Traveler({                                     // Must be defined before destinyManifest can be defined
     apikey: config.destiny2Token,
     userAgent: `Node ${process.version}`,                           // Used to identify your request to the API
-    debug: true
+    debug: true,
+    oauthClientId: config.destiny2OauthID
 });
+const authUrl = traveler.generateOAuthURL();                        // Oauth URL for accessing private characterData
+
 // Init the Destiny 2 DB to call for hash IDs on items/basically anything hased
 var destinyManifest;
 // Refresh the manifest every 3 hours
 setInterval(refreshManifest, 3 * 60 * 60 * 1000);
 // Other declarations
 const destiny2BaseURL = config.destiny2BaseURL;                     // Base URL for getting things like emblems for characters
-const ver = '0.0.137';                                              // Arbitrary version for knowing which bot version is deployed
-
+const ver = '0.0.138';                                              // Arbitrary version for knowing which bot version is deployed
 /*
 Notes:
 - IF A URL ISN'T WORKING TRY ENCODING IT ASDFGHJKL;'
@@ -45,16 +46,15 @@ Notes:
 //TODO: create a hash decoder function for the DB (promise based)
 //TODO: move help commands to a JSON array file
 //TODO: allow for help <command> to get more info on a command
-//TODO: error handle all exceptions
 //TODO: group together like perks/traits in item searches
 //TODO: add an admin list for the bot for live maitenance tasks
-//TODO: clean up github page
 //TODO: integrate py code for paginating
 //TODO: use oauth for a 'my milestones' command
 //TODO: Make sure Xur stuff is working
 //TODO: add a way for player to add nicknames for their battletags (easier searching)
 //TODO: allow players to register with their both for the profile command to give them
 their profile by default
+//TODO: get oauth working for getting Xur items
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -131,6 +131,13 @@ bot.on('message', function (user, userID, channelID, message, evt) {
                 break;
             case 'xur':
                 return getXurData(channelID);
+                break;
+            case 'authmebitch':
+                bot.sendMessage({
+                    to: channelID,
+                    message: authUrl,
+                    typing: true
+                });
                 break;
             // Just add any case commands here
         }
@@ -656,6 +663,9 @@ function getXurData(channelIDArg) {
                 });
             }
         })
+        .then(() => {
+            return getVendorByHash(config.destiny2CharacterIDForXur, config.destiny2XurHash)
+        })
         .catch((err) => {
             return sendErrMessage(channelIDArg, err)
         })
@@ -837,6 +847,24 @@ function queryItemsByName(nameQuery) {
         });
 }
 
+function getVendorByHash(destinyCharacterID, vendorHash) {
+    return traveler.getVendor('4', '4611686018470800544', '2305843009301107371', '2190858386', { components: [200] })
+        .then((data) => {
+            console.log(data);
+        })
+        .catch((err) => {
+            console.log(err);
+        })
+}
+
+/*
+traveler.getAccessToken(hereComesTheCode).then(oauth => {
+    // Provide your traveler object with the oauth object. This is later used for making authenticated calls
+    traveler.oauth = oauth;
+}).catch(err => {
+    console.log(err)
+})
+*/
 // #endregion
 
 // #region miscFunctions
