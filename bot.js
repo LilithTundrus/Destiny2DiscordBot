@@ -55,6 +55,7 @@ Notes:
 //TODO: allow players to register with their both for the profile command to give them
 their profile by default
 //TODO: get oauth working for getting Xur items
+//TODO: Add a new-server join intro message for the bot
 */
 var bot = new Discord.Client({                                      // Initialize Discord Bot with config.token
     token: config.discordToken,
@@ -296,14 +297,10 @@ function getProfile(channelIDArg, playerName) {
                 playerID = playerData.Response[0].membershipId.toString();
                 return getMostRecentPlayedCharID(playerID)          // Get the extra stuff like their icon
                     .then((characterID) => {
-                        console.log('PC Recent player call finished..');
-                        console.log(characterID);
                         return getCharacterDataPC(playerID, characterID)    // Get character data with the ID
                             .then((characterData) => {
                                 var promiseTail = Promise.resolve();
-                                console.log('Got character data by ID');
-                                console.log(characterData);
-                                //characterData.data contains things like light level/etc.
+                                // characterData.data contains things like light level/etc.
                                 playerEmblemURL = destiny2BaseURL + characterData.character.data.emblemPath;
                                 playerLightLevel = characterData.character.data.light;
                                 playerLevel = characterData.character.data.baseCharacterLevel;
@@ -313,7 +310,6 @@ function getProfile(channelIDArg, playerName) {
                                 playerTimePlayed = convertMinsToHrsMins(characterData.character.data.minutesPlayedTotal);
                                 let lastPlayedDate = new Date(characterData.character.data.dateLastPlayed);
                                 playerLastOnline = timeDifference(Date.now(), lastPlayedDate);
-                                console.log(characterData.equipment.data);
                                 //resolve equipment by hash 
                                 characterData.equipment.data.items.forEach((item, index) => {
                                     promiseTail = promiseTail.then(() => {
@@ -323,8 +319,6 @@ function getProfile(channelIDArg, playerName) {
                                                 //searching by hash should only return one value
                                                 //TODO: sanity check this
                                                 let itemData = JSON.parse(queryData[0].json);
-                                                console.log(itemData.displayProperties.name);
-                                                console.log(itemData.defaultDamageType);
                                                 playerEquipMentArray.push(itemData.displayProperties.name);
                                                 //if NOT armor or Kinetic
                                                 if (itemData.defaultDamageType !== 0 && itemData.defaultDamageType !== 1) {
@@ -377,7 +371,7 @@ function getProfile(channelIDArg, playerName) {
                             })
                     })
                     .catch((err) => {
-                        console.log(err);
+                        return sendErrMessage(err)
                     });
             } else {
                 var messageEmbed = new dsTemplates.baseDiscordEmbed;
